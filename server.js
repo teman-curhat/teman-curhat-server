@@ -118,8 +118,13 @@ io.on("connection", (socket) => {
     session.messages.push(msg);
 
     // Send to both parties
-    io.to(session.talkerId).emit("chat:message", msg);
-    io.to(session.listenerId).emit("chat:message", msg);
+if (role === "talker") {
+  socket.emit("chat:message", msg);
+  io.to(session.listenerId).emit("chat:message", msg);
+} else {
+  socket.emit("chat:message", msg);
+  io.to(session.talkerId).emit("chat:message", msg);
+}
 
     // Send to all moderators
     moderators.forEach((modId) =>
