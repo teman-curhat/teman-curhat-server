@@ -151,7 +151,7 @@ io.on("connection", (socket) => {
     const msg = { role, text, ts: Date.now() };
     session.messages.push(msg);
 
-    socket.emit("chat:message", msg);
+    // Hanya kirim ke pihak LAIN — pengirim sudah tampilkan lokal di frontend
     const otherId = role === "talker" ? session.listenerId : session.talkerId;
     io.to(otherId).emit("chat:message", msg);
 
