@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Teman Curhat</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1814;
+    --surface2: #242018;
+    --border: #2e2a22;
+    --gold: #c9a84c;
+    --gold2: #e8c97a;
+    --cream: #f0e8d8;
+    --muted: #7a7060;
+    --green: #4caf7a;
+    --red: #c96060;
+    --blue: #6090c9;
+    --radius: 12px;
+  }
+
+  /* ── ANTI SCREENSHOT ── */
+  @media print {
+    body { display: none !important; }
+  }
+  .no-screenshot {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, #1e1a0e 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 480px; }
+
+  /* ── LANDING ── */
+  .landing { text-align: center; animation: fadeUp .6s ease both; }
+
+  .logo {
+    font-family: 'Lora', serif;
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: var(--gold2);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .logo span { font-style: italic; font-weight: 400; color: var(--gold); }
+  .tagline {
+    font-size: .85rem;
+    color: var(--muted);
+    margin-top: 8px;
+    letter-spacing: .5px;
+  }
+
+  .divider {
+    width: 40px; height: 1px;
+    background: var(--gold);
+    margin: 28px auto;
+    opacity: .5;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 12px;
+  }
+
+  .role-btn {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    color: var(--cream);
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+    transition: all .2s;
+  }
+  .role-btn:hover { border-color: var(--gold); background: var(--surface2); }
+  .role-btn .icon { font-size: 1.6rem; }
+  .role-btn .rb-title { font-family: 'Lora', serif; font-size: 1rem; color: var(--gold2); }
+  .role-btn .rb-desc { font-size: .78rem; color: var(--muted); margin-top: 3px; }
+
+  /* ── FORMS ── */
+  .screen { display: none; animation: fadeUp .4s ease both; }
+  .screen.active { display: block; }
+
+  h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.3rem;
+    color: var(--gold2);
+    margin-bottom: 6px;
+  }
+  .sub { font-size: .82rem; color: var(--muted); margin-bottom: 20px; }
+
+  label { font-size: .8rem; color: var(--muted); display: block; margin-bottom: 6px; }
+  input[type=text], input[type=password] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    outline: none;
+    transition: border-color .2s;
+    margin-bottom: 16px;
+  }
+  input:focus { border-color: var(--gold); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem;
+    font-weight: 500;
+    transition: all .2s;
+  }
+  .btn-primary { background: var(--gold); color: #0f0e0c; }
+  .btn-primary:hover { background: var(--gold2); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--muted); color: var(--cream); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { opacity: .85; }
+  .btn-full { width: 100%; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .back-link {
+    font-size: .8rem; color: var(--muted); cursor: pointer;
+    margin-bottom: 20px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .back-link:hover { color: var(--cream); }
+
+  /* ── STATUS ── */
+  .status-box {
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    margin-bottom: 16px;
+  }
+  .status-icon { font-size: 2rem; margin-bottom: 8px; }
+  .status-title { font-family: 'Lora', serif; font-size: 1rem; color: var(--gold2); }
+  .status-desc { font-size: .8rem; color: var(--muted); margin-top: 6px; }
+
+  .pulse { animation: pulse 2s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+  /* ── CHAT ── */
+  .chat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .chat-role { font-size: .75rem; color: var(--muted); }
+  .chat-role strong { color: var(--gold); }
+
+  .chat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    height: 340px;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+    scroll-behavior: smooth;
+  }
+
+  .bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: .88rem;
+    line-height: 1.5;
+    animation: fadeUp .2s ease both;
+  }
+  .bubble.talker {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .bubble.listener {
+    background: var(--gold);
+    color: #0f0e0c;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .bubble .btime { font-size: .68rem; opacity: .5; margin-top: 4px; }
+
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input-row input { flex: 1; margin-bottom: 0; }
+
+  /* ── MODERATOR ── */
+  .mod-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-num { font-family: 'Lora', serif; font-size: 1.8rem; color: var(--gold2); }
+  .stat-label { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+  .session-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .session-info .si-title { font-size: .85rem; color: var(--cream); }
+  .session-info .si-sub { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block; margin-right: 6px;
+  }
+  .dot-green { background: var(--green); }
+  .dot-yellow { background: var(--gold); }
+  .dot-red { background: var(--red); }
+
+  /* ── LISTENER INCOMING ── */
+  .incoming-box {
+    background: var(--surface);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    animation: fadeUp .3s ease both;
+    margin-bottom: 16px;
+  }
+  .incoming-box .icon { font-size: 2.4rem; margin-bottom: 10px; }
+  .incoming-title { font-family: 'Lora', serif; font-size: 1.1rem; color: var(--gold2); }
+  .incoming-sub { font-size: .8rem; color: var(--muted); margin: 8px 0 18px; }
+  .incoming-actions { display: flex; gap: 10px; justify-content: center; }
+
+  /* ── NOTIF TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--gold);
+    border-radius: 30px; padding: 10px 20px;
+    font-size: .82rem; color: var(--gold2);
+    z-index: 999; animation: fadeUp .3s ease both;
+    white-space: nowrap;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .mood-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all .2s;
+    flex: 1;
+    margin: 0 3px;
+  }
+  .mood-btn:hover { border-color: var(--gold); }
+  .mood-btn.selected { border-color: var(--gold); background: #2a2210; }
+  .mood-label { font-size: .62rem; color: var(--muted); margin-top: 5px; font-family: 'DM Sans', sans-serif; line-height: 1.3; }
+  .mood-btn.selected .mood-label { color: var(--gold2); }
+
+  .mt8 { margin-top: 8px; }
+  .mt16 { margin-top: 16px; }
+  .gap8 { display: flex; gap: 8px; }
+  .empty-state { text-align: center; color: var(--muted); font-size: .82rem; padding: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- LANDING -->
+  <div class="landing" id="screen-landing">
+    <div class="logo">Teman <span>Curhat</span></div>
+    <div class="tagline">Ruang aman untuk bercerita</div>
+    <div class="divider"></div>
+    <button class="role-btn" onclick="showScreen('talker-join')">
+      <span class="icon">💬</span>
+      <div>
+        <div class="rb-title">Saya ingin curhat</div>
+        <div class="rb-desc">Ceritakan apa yang kamu rasakan secara anonim</div>
+      </div>
+    </button>
+    <button class="role-btn" onclick="showScreen('listener-join')">
+      <span class="icon">🫂</span>
+      <div>
+        <div class="rb-title">Saya listener</div>
+        <div class="rb-desc">Siap mendengarkan dan menemani</div>
+      </div>
+    </button>
+    <button class="role-btn" onclick="showScreen('mod-join')" style="opacity:.5">
+      <span class="icon">🔒</span>
+      <div>
+        <div class="rb-title">Moderator</div>
+        <div class="rb-desc">Akses khusus pengelola</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- TALKER JOIN -->
+  <div class="screen" id="screen-talker-join">
+    <div class="back-link" onclick="showScreen('landing')">← Kembali</div>
+    <div class="card">
+      <h2>Halo 👋</h2>
+      <p class="sub">Tidak perlu nama. Tidak ada yang menghakimi di sini.</p>
+      <p style="font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:20px">
+        Kami akan menghubungkan kamu dengan seorang pendengar yang siap menemani.
+        Semua percakapan bersifat anonim dan tidak disimpan.
+      </p>
+      <button class="btn btn-primary btn-full" onclick="talkerJoin()">Mulai Cerita</button>
+    </div>
+  </div>
+
+  <!-- TALKER WAITING -->
+  <div class="screen" id="screen-talker-waiting">
+    <div class="status-box">
+      <div class="status-icon pulse">🕰️</div>
+      <div class="status-title">Mencari pendengar...</div>
+      <div class="status-desc">Semua pendengar sedang sibuk.<br>Kamu akan diberi tahu saat ada yang tersedia.</div>
+    </div>
+    <button class="btn btn-ghost btn-full" onclick="cancelQueue()">Batalkan</button>
+  </div>
+
+  <!-- TALKER PENDING (waiting for listener accept) -->
+  <div class="screen" id="screen-talker-pending">
+    <div class="status-box">
+      <div class="status-icon pulse">✨</div>
+      <div class="status-title">Pendengar ditemukan!</div>
+      <div class="status-desc">Menunggu konfirmasi pendengar...</div>
+    </div>
+  </div>
+
+  <!-- CHAT (shared by talker and listener) -->
+  <div class="screen" id="screen-chat">
+    <div class="chat-header">
+      <div class="chat-role"><span class="dot dot-green"></span>Sesi aktif · <strong id="chat-role-label">—</strong></div>
+      <button class="btn btn-ghost" style="padding:6px 12px;font-size:.78rem" onclick="endSession()">Akhiri</button>
+    </div>
+    <!-- TIMER BAR -->
+    <div id="timer-wrap" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:.72rem;color:var(--muted)">⏱ Waktu sesi</span>
+        <span id="timer-label" style="font-size:.78rem;color:var(--gold2);font-family:'Lora',serif">1:30:00</span>
+      </div>
+      <div style="background:var(--surface2);border-radius:99px;height:4px;overflow:hidden">
+        <div id="timer-bar" style="height:100%;background:var(--gold);border-radius:99px;width:100%;transition:width 1s linear"></div>
+      </div>
+    </div>
+    <div class="chat-box" id="chat-box"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter')sendMsg()" />
+      <button class="btn btn-primary" onclick="sendMsg()">→</button>
+    </div>
+  </div>
+
+  <!-- SESSION ENDED + FEEDBACK -->
+  <div class="screen" id="screen-ended">
+    <div class="status-box">
+      <div class="status-icon">🌿</div>
+      <div class="status-title">Sesi selesai</div>
+      <div class="status-desc" id="ended-msg">Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏</div>
+    </div>
+
+    <!-- FEEDBACK FORM (hanya untuk talker) -->
+    <div id="feedback-section">
+      <div class="card" style="margin-top:12px">
+        <h2 style="font-size:1rem;margin-bottom:6px">Bagaimana perasaanmu? 💭</h2>
+        <p class="sub" style="margin-bottom:14px">Anonim & tidak wajib. Bantu kami jadi lebih baik.</p>
+
+        <!-- EMOJI MOOD -->
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px" id="mood-row">
+          <button class="mood-btn" data-mood="Jauh lebih lega" onclick="pilihMood(this)">
+            <div style="font-size:1.6rem">😌</div>
+            <div class="mood-label">Jauh lebih lega</div>
+          </button>
+          <button class="mood-btn" data-mood="Sedikit lebih baik" onclick="pilihMood(this)">
+            <div style="font-size:1.6rem">🙂</div>
+            <div class="mood-label">Lebih baik</div>
+          </button>
+          <button class="mood-btn" data-mood="Biasa saja" onclick="pilihMood(this)">
+            <div style="font-size:1.6rem">😐</div>
+            <div class="mood-label">Biasa saja</div>
+          </button>
+          <button class="mood-btn" data-mood="Masih berat" onclick="pilihMood(this)">
+            <div style="font-size:1.6rem">😔</div>
+            <div class="mood-label">Masih berat</div>
+          </button>
+        </div>
+
+        <!-- PESAN TAMBAHAN -->
+        <textarea id="feedback-text" placeholder="Ada yang ingin kamu sampaikan? (opsional)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:.85rem;line-height:1.6;resize:none;outline:none;min-height:80px;margin-bottom:12px"></textarea>
+
+        <button class="btn btn-primary btn-full" id="feedback-btn" onclick="kirimFeedback()">Kirim Feedback →</button>
+        <button class="btn btn-ghost btn-full mt8" onclick="resetApp()">Lewati</button>
+      </div>
+    </div>
+
+    <!-- SETELAH FEEDBACK DIKIRIM -->
+    <div id="feedback-done" style="display:none;text-align:center;padding:20px 0">
+      <div style="font-size:2rem;margin-bottom:10px">🙏</div>
+      <div style="font-family:'Lora',serif;color:var(--gold2);margin-bottom:6px">Terima kasih!</div>
+      <div style="font-size:.8rem;color:var(--muted)">Feedbackmu sangat berarti untuk kami.</div>
+      <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="resetApp()">Kembali ke Beranda</button>
+    </div>
+  </div>
+
+  <!-- LISTENER JOIN -->
+  <div class="screen" id="screen-listener-join">
+    <div class="back-link" onclick="showScreen('landing')">← Kembali</div>
+    <div class="card">
+      <h2>Login Listener 🫂</h2>
+      <p class="sub">Masuk dengan kode yang diberikan koordinator</p>
+      <label>Nama panggilanmu</label>
+      <input type="text" id="listener-alias" placeholder="mis. Kak Reza" />
+      <label>Kode Listener</label>
+      <input type="password" id="listener-secret" placeholder="••••••••" />
+      <button class="btn btn-primary btn-full" onclick="listenerJoin()">Masuk sebagai Listener</button>
+    </div>
+  </div>
+
+  <!-- LISTENER STANDBY -->
+  <div class="screen" id="screen-listener-standby">
+    <div class="status-box">
+      <div class="status-icon">🫂</div>
+      <div class="status-title">Kamu online, <span id="listener-name-label">—</span></div>
+      <div class="status-desc">Menunggu seseorang yang butuh teman bicara...</div>
+    </div>
+    <div class="status-box" style="background:var(--surface2)">
+      <div class="status-icon">💡</div>
+      <div class="status-title" style="font-size:.9rem">Tips Mendengarkan</div>
+      <div class="status-desc" style="text-align:left;margin-top:10px;line-height:2">
+        • Dengarkan tanpa menghakimi<br>
+        • Validasi perasaan mereka<br>
+        • Tidak perlu memberi solusi<br>
+        • Hadir dengan tulus 🙏
+      </div>
+    </div>
+  </div>
+
+  <!-- LISTENER INCOMING -->
+  <div class="screen" id="screen-listener-incoming">
+    <div class="incoming-box">
+      <div class="icon">🔔</div>
+      <div class="incoming-title">Ada yang ingin curhat</div>
+      <div class="incoming-sub">Seseorang membutuhkan teman bicara sekarang.</div>
+      <div class="incoming-actions">
+        <button class="btn btn-primary" onclick="listenerAccept()">Terima 🤝</button>
+        <button class="btn btn-ghost" onclick="listenerReject()">Lewati</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODERATOR JOIN -->
+  <div class="screen" id="screen-mod-join">
+    <div class="back-link" onclick="showScreen('landing')">← Kembali</div>
+    <div class="card">
+      <h2>🔒 Moderator</h2>
+      <p class="sub">Akses khusus pengelola Teman Curhat</p>
+      <label>Moderator Password</label>
+      <input type="password" id="mod-secret" placeholder="••••••••" onkeydown="if(event.key==='Enter')modJoin()" />
+      <button class="btn btn-primary btn-full" onclick="modJoin()">Masuk</button>
+    </div>
+  </div>
+
+  <!-- MODERATOR DASHBOARD -->
+  <div class="screen" id="screen-mod-dashboard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="logo" style="font-size:1.3rem">Teman <span>Curhat</span></div>
+      <div style="font-size:.72rem;color:var(--green)"><span class="dot dot-green"></span>Moderator</div>
+    </div>
+    <div class="mod-grid">
+      <div class="stat-card"><div class="stat-num" id="mod-listener-count">0</div><div class="stat-label">Listener Online</div></div>
+      <div class="stat-card"><div class="stat-num" id="mod-session-count">0</div><div class="stat-label">Sesi Aktif</div></div>
+      <div class="stat-card"><div class="stat-num" id="mod-queue-count">0</div><div class="stat-label">Antrian</div></div>
+      <div class="stat-card"><div class="stat-num" id="mod-talker-count">0</div><div class="stat-label">Talker Online</div></div>
+    </div>
+    <h2 style="margin-bottom:10px">Sesi Aktif</h2>
+    <div id="mod-sessions"><div class="empty-state">Belum ada sesi aktif</div></div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────────────
+const SERVER_URL = window.SOCKET_URL || "https://teman-curhat-server-production.up.railway.app";
+
+// ─── STATE ──────────────────────────────────────────────
+let socket = null;
+let currentSession = null;
+let myRole = null;
+
+// ─── SOCKET INIT ────────────────────────────────────────
+function initSocket() {
+  if (socket && socket.connected) return;
+  socket = io(SERVER_URL, { transports: ["websocket", "polling"] });
+
+  socket.on("connect_error", () => showToast("⚠️ Tidak dapat terhubung ke server"));
+
+  socket.on("error", ({ message }) => showToast("❌ " + message));
+
+  socket.on("listener:joined", ({ alias }) => {
+    document.getElementById("listener-name-label").textContent = alias;
+    showScreen("listener-standby");
+  });
+
+  socket.on("listener:talker_waiting", () => {
+    showScreen("listener-incoming");
+  });
+
+  socket.on("talker:waiting", () => {
+    showScreen("talker-pending");
+  });
+
+  socket.on("talker:queued", () => {
+    showScreen("talker-waiting");
+  });
+
+  socket.on("session:start", ({ sessionId, listenerMode }) => {
+    currentSession = sessionId;
+    // Pastikan myRole ter-set dengan benar
+    if (listenerMode) myRole = "listener";
+    else myRole = "talker";
+    document.getElementById("chat-role-label").textContent = listenerMode ? "Sebagai Pendengar" : "Cerita kamu aman di sini";
+    document.getElementById("chat-box").innerHTML = "";
+    document.getElementById("timer-label").style.color = "var(--gold2)";
+    showScreen("chat");
+    startTimer();
+  });
+
+  socket.on("chat:message", (msg) => {
+    // Server hanya kirim pesan dari pihak LAIN — langsung tampilkan semua
+    appendMessage(msg);
+  });
+
+  socket.on("session:ended", ({ byModerator, listenerLeft, talkerLeft } = {}) => {
+    stopTimer();
+    currentSession = null;
+    let msg = "Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏";
+    if (byModerator) msg = "Sesi diakhiri oleh moderator.";
+    else if (listenerLeft) msg = "Pendengar telah meninggalkan sesi.";
+    else if (talkerLeft) msg = "Pengguna telah meninggalkan sesi.";
+    document.getElementById("ended-msg").innerHTML = msg;
+
+    if (myRole === "listener") {
+      setTimeout(() => showScreen("listener-standby"), 800);
+    } else {
+      // Reset feedback state
+      selectedMood = null;
+      document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected"));
+      document.getElementById("feedback-text").value = "";
+      document.getElementById("feedback-section").style.display = "block";
+      document.getElementById("feedback-done").style.display = "none";
+      document.getElementById("feedback-btn").disabled = false;
+      document.getElementById("feedback-btn").textContent = "Kirim Feedback →";
+      showScreen("ended");
+    }
+  });
+
+  socket.on("session:no_listener", () => {
+    showScreen("talker-waiting");
+  });
+
+  socket.on("mod:joined", () => {
+    showScreen("mod-dashboard");
+  });
+
+  socket.on("mod:update", (state) => {
+    document.getElementById("mod-listener-count").textContent = state.listeners.length;
+    document.getElementById("mod-session-count").textContent = state.sessions.length;
+    document.getElementById("mod-queue-count").textContent = state.queue;
+    document.getElementById("mod-talker-count").textContent = state.talkers.length;
+
+    const container = document.getElementById("mod-sessions");
+    if (state.sessions.length === 0) {
+      container.innerHTML = '<div class="empty-state">Belum ada sesi aktif</div>';
+    } else {
+      container.innerHTML = state.sessions.map(s => `
+        <div class="session-item">
+          <div class="session-info">
+            <div class="si-title"><span class="dot dot-green"></span>${s.listenerAlias}</div>
+            <div class="si-sub">${s.messageCount} pesan · ${new Date(s.startTime).toLocaleTimeString('id-ID')}</div>
+          </div>
+          <button class="btn btn-danger" style="padding:6px 12px;font-size:.75rem" onclick="modEndSession('${s.sessionId}')">Akhiri</button>
+        </div>
+      `).join('');
+    }
+  });
+
+  socket.on("mod:message", ({ sessionId, msg }) => {
+    // Could extend: show live messages in moderator view
+  });
+}
+
+// ─── ROLE ACTIONS ────────────────────────────────────────
+function talkerJoin() {
+  myRole = "talker";
+  initSocket();
+  socket.emit("talker:join");
+}
+
+function cancelQueue() {
+  socket.disconnect();
+  socket = null;
+  showScreen("landing");
+}
+
+function listenerJoin() {
+  const alias = document.getElementById("listener-alias").value.trim() || "Listener";
+  const secret = document.getElementById("listener-secret").value.trim();
+  if (!secret) { showToast("Masukkan kode listener dulu ya"); return; }
+  myRole = "listener";
+  initSocket();
+  socket.emit("listener:join", { secret, alias });
+}
+
+function listenerAccept() {
+  socket.emit("listener:accept");
+}
+
+function listenerReject() {
+  socket.emit("listener:reject");
+  showScreen("listener-standby");
+}
+
+function modJoin() {
+  const secret = document.getElementById("mod-secret").value.trim();
+  if (!secret) return;
+  myRole = "moderator";
+  initSocket();
+  socket.emit("mod:join", { secret });
+}
+
+function modEndSession(sessionId) {
+  if (confirm("Akhiri sesi ini?")) {
+    socket.emit("mod:end_session", { sessionId });
+  }
+}
+
+// ─── FILTER KATA KOTOR ───────────────────────────────────
+const KATA_KOTOR = [
+  "anjing","anjir","anjg","anying","bangsat","bgst","brengsek","bajingan","bjg","keparat",
+  "babi","goblok","gblk","tolol","tlл","idiot","bodoh","tai","t4i","kontol","k0ntol","kntl",
+  "memek","mmk","ngentot","ngt","ng3ntot","jancok","jnck","j4ncok","cok","c0k","asu",
+  "kampret","kmpr","sialan","fuck","f*ck","fck","sh1t","shit","sh*t","damn","ass",
+  "b1tch","bitch","bastard","cunt","c*nt","dick","d1ck","pussy","p*ssy","wtf","stfu"
+];
+
+// Normalisasi teks: hapus spasi antar huruf, ganti angka/simbol umum
+function normalizeText(text) {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, "")           // hapus semua spasi (a n j i n g -> anjing)
+    .replace(/0/g, "o")            // 0 -> o
+    .replace(/1/g, "i")            // 1 -> i
+    .replace(/3/g, "e")            // 3 -> e
+    .replace(/4/g, "a")            // 4 -> a
+    .replace(/\*/g, "")            // hapus asterisk
+    .replace(/[^a-z]/g, "");       // hapus karakter non-huruf
+}
+
+function containsKataKotor(text) {
+  const normalized = normalizeText(text);
+  const normal = text.toLowerCase();
+  return KATA_KOTOR.some(k => {
+    const kNorm = normalizeText(k);
+    return normalized.includes(kNorm) || normal.includes(k);
+  });
+}
+
+function sendMsg() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+  if (!text || !currentSession) return;
+
+  if (containsKataKotor(text)) {
+    showToast("⚠️ Pesan mengandung kata yang tidak pantas. Tolong jaga tutur kata ya 🙏");
+    input.select();
+    return;
+  }
+
+  // Tampilkan pesan langsung di lokal dengan flag isOwn
+  const localMsg = { role: myRole, text, ts: Date.now(), isOwn: true };
+  appendMessage(localMsg);
+  socket.emit("chat:message", { sessionId: currentSession, text });
+  input.value = "";
+  setTimeout(() => input.focus(), 50);
+}
+
+function appendMessage(msg) {
+  const box = document.getElementById("chat-box");
+  const div = document.createElement("div");
+  // isOwn: true = pesan sendiri (kanan, kuning)
+  // isOwn: false/undefined = pesan orang lain (kiri, gelap)
+  div.className = `bubble ${msg.isOwn ? "listener" : "talker"}`;
+  const time = new Date(msg.ts).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  div.innerHTML = `${escHtml(msg.text)}<div class="btime">${time}</div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+// ─── TIMER ───────────────────────────────────────────────
+const SESSION_DURATION = 90 * 60; // 1 jam 30 menit dalam detik
+let timerInterval = null;
+let timerSeconds = SESSION_DURATION;
+
+function startTimer() {
+  timerSeconds = SESSION_DURATION;
+  updateTimerDisplay();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+
+    // Peringatan 10 menit terakhir
+    if (timerSeconds === 10 * 60) {
+      showToast("⏱ 10 menit lagi sesi berakhir");
+      document.getElementById("timer-label").style.color = "var(--gold)";
+    }
+    // Peringatan 5 menit terakhir
+    if (timerSeconds === 5 * 60) {
+      showToast("⚠️ 5 menit lagi sesi berakhir");
+      document.getElementById("timer-label").style.color = "#e07a30";
+    }
+    // Waktu habis
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      showToast("⏰ Waktu sesi habis");
+      setTimeout(() => {
+        socket.emit("session:end", { sessionId: currentSession });
+      }, 1500);
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+function updateTimerDisplay() {
+  const h = Math.floor(timerSeconds / 3600);
+  const m = Math.floor((timerSeconds % 3600) / 60);
+  const s = timerSeconds % 60;
+  const label = h > 0
+    ? `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`
+    : `${m}:${String(s).padStart(2,"0")}`;
+  document.getElementById("timer-label").textContent = label;
+
+  // Update progress bar
+  const pct = (timerSeconds / SESSION_DURATION) * 100;
+  const bar = document.getElementById("timer-bar");
+  bar.style.width = pct + "%";
+  // Warna bar berubah sesuai sisa waktu
+  if (pct > 30) bar.style.background = "var(--gold)";
+  else if (pct > 10) bar.style.background = "#e07a30";
+  else bar.style.background = "var(--red)";
+}
+
+function endSession() {
+  if (!confirm("Yakin mau mengakhiri sesi?")) return;
+  stopTimer();
+  socket.emit("session:end", { sessionId: currentSession });
+}
+
+// ─── FEEDBACK ────────────────────────────────────────────
+// Ganti dengan Formspree URL lo
+const FORMSPREE_FEEDBACK = "https://formspree.io/f/xvzvjzpb";
+
+let selectedMood = null;
+
+function pilihMood(btn) {
+  document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected"));
+  btn.classList.add("selected");
+  selectedMood = btn.dataset.mood;
+}
+
+async function kirimFeedback() {
+  const text = document.getElementById("feedback-text").value.trim();
+  if (!selectedMood && !text) {
+    // Kalau tidak ada yang diisi, langsung selesai
+    document.getElementById("feedback-section").style.display = "none";
+    document.getElementById("feedback-done").style.display = "block";
+    return;
+  }
+
+  const btn = document.getElementById("feedback-btn");
+  btn.disabled = true;
+  btn.textContent = "Mengirim...";
+
+  try {
+    await fetch(FORMSPREE_FEEDBACK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        perasaan: selectedMood || "(tidak dipilih)",
+        pesan: text || "(tidak diisi)",
+        _subject: "[Teman Curhat] Feedback Sesi",
+      }),
+    });
+  } catch(e) { /* gagal kirim tidak masalah, tetap lanjut */ }
+
+  document.getElementById("feedback-section").style.display = "none";
+  document.getElementById("feedback-done").style.display = "block";
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll(".screen, .landing").forEach(el => {
+    el.classList.remove("active");
+    el.style.display = "none";
+  });
+  const el = document.getElementById("screen-" + name);
+  if (el) {
+    el.style.display = "block";
+    el.classList.add("active");
+    // Khusus screen ended: pastikan feedback-section keliatan
+    if (name === "ended") {
+      const fs = document.getElementById("feedback-section");
+      const fd = document.getElementById("feedback-done");
+      if (fs) fs.style.display = "block";
+      if (fd) fd.style.display = "none";
+    }
+  }
+}
+
+function resetApp() {
+  if (socket) { socket.disconnect(); socket = null; }
+  myRole = null; currentSession = null;
+  document.getElementById("listener-secret").value = "";
+  document.getElementById("mod-secret").value = "";
+  showScreen("landing");
+}
+
+// ─── UTILS ───────────────────────────────────────────────
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const existing = document.querySelector(".toast");
+  if (existing) existing.remove();
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = msg;
+  document.body.appendChild(el);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.remove(), 3000);
+}
+
+// ─── ANTI SCREENSHOT ─────────────────────────────────────
+// Blur screen when app loses focus (screenshot tools often do this)
+document.addEventListener("visibilitychange", () => {
+  document.body.style.filter = document.hidden ? "blur(20px)" : "";
+});
+// Disable right click
+document.addEventListener("contextmenu", e => e.preventDefault());
+// Disable common screenshot shortcuts
+document.addEventListener("keydown", (e) => {
+  if (
+    e.key === "PrintScreen" ||
+    (e.metaKey && e.shiftKey && ["3","4","5"].includes(e.key)) || // Mac
+    (e.ctrlKey && e.key === "p") // Print
+  ) {
+    e.preventDefault();
+    showToast("📵 Screenshot tidak diperbolehkan demi privasi pengguna");
+  }
+});
+
+// ─── INIT ─────────────────────────────────────────────────
+showScreen("landing");
+</script>
+</body>
+</html>

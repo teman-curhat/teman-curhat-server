@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Daftar Sesi Curhat · Teman Curhat</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1814;
+    --surface2: #242018;
+    --border: #2e2a22;
+    --gold: #c9a84c;
+    --gold2: #e8c97a;
+    --cream: #f0e8d8;
+    --muted: #7a7060;
+    --green: #4caf7a;
+    --red: #c96060;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 32px 20px 60px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, #1e1a0e 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    animation: fadeUp .6s ease both;
+  }
+
+  .logo {
+    font-family: 'Lora', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--gold2);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .logo span { font-style: italic; font-weight: 400; color: var(--gold); }
+  .tagline { text-align: center; font-size: .82rem; color: var(--muted); margin-bottom: 32px; }
+
+  .section-title {
+    font-family: 'Lora', serif;
+    font-size: 1.1rem;
+    color: var(--gold2);
+    margin-bottom: 6px;
+  }
+  .section-sub { font-size: .8rem; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  /* SLOT GRID */
+  .slot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .slot-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 10px;
+    color: var(--cream);
+    cursor: pointer;
+    text-align: center;
+    transition: all .2s;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .82rem;
+  }
+  .slot-btn:hover { border-color: var(--gold); }
+  .slot-btn.selected {
+    border-color: var(--gold);
+    background: #2a2210;
+    color: var(--gold2);
+  }
+  .slot-btn .slot-day { font-weight: 500; font-size: .85rem; }
+  .slot-btn .slot-time { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+  .slot-btn.selected .slot-time { color: var(--gold); }
+  .slot-btn.full {
+    opacity: .35;
+    cursor: not-allowed;
+    border-color: var(--border);
+  }
+  .slot-btn.full .slot-day { text-decoration: line-through; }
+
+  /* TOPIK */
+  .topic-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .topic-chip {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: .78rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .topic-chip:hover { border-color: var(--gold); color: var(--cream); }
+  .topic-chip.selected {
+    border-color: var(--gold);
+    background: #2a2210;
+    color: var(--gold2);
+  }
+
+  /* TEXTAREA */
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    transition: border-color .2s;
+    min-height: 90px;
+  }
+  textarea:focus { border-color: var(--gold); }
+  textarea::placeholder { color: var(--muted); }
+
+  /* PRIVACY NOTE */
+  .privacy-note {
+    background: #1a1f14;
+    border: 1px solid #2e3a22;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: .78rem;
+    color: #8aaa70;
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  .privacy-note strong { color: #aad080; }
+
+  /* SUBMIT */
+  .btn-submit {
+    width: 100%;
+    background: var(--gold);
+    color: #0f0e0c;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    font-family: 'Lora', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: .3px;
+  }
+  .btn-submit:hover { background: var(--gold2); }
+  .btn-submit:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* SUCCESS */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    animation: fadeUp .5s ease both;
+  }
+  .success-icon { font-size: 3rem; margin-bottom: 16px; }
+  .success-title {
+    font-family: 'Lora', serif;
+    font-size: 1.4rem;
+    color: var(--gold2);
+    margin-bottom: 10px;
+  }
+  .success-desc { font-size: .88rem; color: var(--muted); line-height: 1.8; }
+  .success-slot {
+    background: var(--surface);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 14px;
+    margin: 20px 0;
+    font-size: .9rem;
+    color: var(--gold2);
+    font-family: 'Lora', serif;
+  }
+
+  /* DIVIDER */
+  .divider {
+    width: 40px; height: 1px;
+    background: var(--gold);
+    margin: 24px auto;
+    opacity: .4;
+  }
+
+  /* ERROR */
+  .error-msg {
+    font-size: .76rem;
+    color: var(--red);
+    margin-top: 6px;
+    display: none;
+  }
+
+  .btn-chat-now {
+    display: block;
+    background: transparent;
+    border: 1.5px solid var(--gold);
+    border-radius: 10px;
+    padding: 14px;
+    color: var(--gold2);
+    font-family: 'Lora', serif;
+    font-size: .95rem;
+    text-decoration: none;
+    text-align: center;
+    transition: all .2s;
+    margin-top: 4px;
+  }
+  .btn-chat-now:hover {
+    background: #2a2210;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- FORM -->
+  <div id="form-screen">
+    <div class="logo">Teman <span>Curhat</span></div>
+    <div class="tagline">Daftar sesi pendampingan · Anonim & aman</div>
+
+    <!-- SLOT -->
+    <div class="card">
+      <div class="section-title">Pilih Jadwal 🗓️</div>
+      <div class="section-sub">Pilih satu slot waktu yang paling cocok buatmu.</div>
+
+      <div class="slot-grid" id="slot-grid">
+        <!-- ═══════════════════════════════════════════════════
+             EDIT JADWAL DI SINI
+             Format: data-slot="HARI|JAM"
+             Tambah class "full" kalau slot sudah penuh
+             ═══════════════════════════════════════════════════ -->
+        <button class="slot-btn" data-slot="Senin|19.00 WIB" onclick="pilihSlot(this)">
+          <div class="slot-day">Senin</div>
+          <div class="slot-time">19.00 WIB</div>
+        </button>
+        <button class="slot-btn" data-slot="Rabu|19.00 WIB" onclick="pilihSlot(this)">
+          <div class="slot-day">Rabu</div>
+          <div class="slot-time">19.00 WIB</div>
+        </button>
+        <button class="slot-btn" data-slot="Jumat|20.00 WIB" onclick="pilihSlot(this)">
+          <div class="slot-day">Jumat</div>
+          <div class="slot-time">20.00 WIB</div>
+        </button>
+        <button class="slot-btn" data-slot="Sabtu|10.00 WIB" onclick="pilihSlot(this)">
+          <div class="slot-day">Sabtu</div>
+          <div class="slot-time">10.00 WIB</div>
+        </button>
+        <button class="slot-btn" data-slot="Sabtu|19.00 WIB" onclick="pilihSlot(this)">
+          <div class="slot-day">Sabtu</div>
+          <div class="slot-time">19.00 WIB</div>
+        </button>
+        <button class="slot-btn" data-slot="Minggu|10.00 WIB" onclick="pilihSlot(this)">
+          <div class="slot-day">Minggu</div>
+          <div class="slot-time">10.00 WIB</div>
+        </button>
+      </div>
+      <div class="error-msg" id="err-slot">Pilih jadwal dulu ya 🙏</div>
+    </div>
+
+    <!-- TOPIK -->
+    <div class="card">
+      <div class="section-title">Topik yang ingin dibicarakan 💬</div>
+      <div class="section-sub">Pilih satu atau lebih. Ini membantu kami mempersiapkan pendengar yang tepat.</div>
+      <div class="topic-grid" id="topic-grid">
+        <button class="topic-chip" onclick="pilihTopik(this)">Keluarga</button>
+        <button class="topic-chip" onclick="pilihTopik(this)">Pertemanan</button>
+        <button class="topic-chip" onclick="pilihTopik(this)">Percintaan</button>
+        <button class="topic-chip" onclick="pilihTopik(this)">Pekerjaan</button>
+        <button class="topic-chip" onclick="pilihTopik(this)">Kesehatan mental</button>
+        <button class="topic-chip" onclick="pilihTopik(this)">Iman & spiritual</button>
+        <button class="topic-chip" onclick="pilihTopik(this)">Masa depan</button>
+        <button class="topic-chip" onclick="pilihTopik(this)">Kesepian</button>
+        <button class="topic-chip" onclick="pilihTopik(this)">Lainnya</button>
+      </div>
+      <div class="error-msg" id="err-topik">Pilih minimal satu topik ya 🙏</div>
+    </div>
+
+    <!-- CERITA SINGKAT -->
+    <div class="card">
+      <div class="section-title">Ceritakan sedikit (opsional) 🌿</div>
+      <div class="section-sub">Tidak wajib. Ini hanya untuk membantu pendengar mempersiapkan diri. Tidak ada nama, tidak ada identitas.</div>
+      <textarea id="cerita" placeholder="Ceritakan sedikit apa yang ingin kamu bicarakan..." maxlength="500"></textarea>
+    </div>
+
+    <!-- PRIVACY -->
+    <div class="privacy-note">
+      🔒 <strong>Privasimu terjaga.</strong> Form ini tidak meminta nama, email, atau identitas apapun.
+      Tidak ada data yang disimpan secara permanen. Semua percakapan bersifat anonim.
+    </div>
+
+    <button class="btn-submit" onclick="kirimForm()">Daftar Sesi Curhat →</button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">🌿</div>
+    <div class="success-title">Pendaftaran Diterima</div>
+    <div class="success-slot" id="success-slot-text">—</div>
+    <div class="success-desc">
+      Terima kasih sudah mau melangkah. Itu butuh keberanian.<br><br>
+      Kami akan konfirmasi jadwalmu segera.<br>
+      Sampai jumpa di sesi curhat ya 🙏
+    </div>
+    <div class="divider"></div>
+    <div class="success-desc" style="font-size:.84rem;margin-bottom:14px">
+      Kalau kamu butuh bicara sekarang dan ada pendengar yang online,<br>kamu bisa langsung masuk ke ruang chat:
+    </div>
+    <a href="https://teman-curhat.netlify.app" target="_blank" class="btn-chat-now">
+      💬 Masuk ke Ruang Curhat Sekarang
+    </a>
+
+    <div style="margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:left">
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px">🔗 Simpan link ini supaya bisa balik kapanpun:</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div id="copy-link-text" style="font-size:.82rem;color:var(--gold2);font-family:'Lora',serif;flex:1;word-break:break-all">teman-curhat.netlify.app</div>
+        <button onclick="copyLink()" id="copy-btn" style="background:var(--gold);border:none;border-radius:6px;padding:7px 12px;font-size:.75rem;font-weight:500;cursor:pointer;color:#0f0e0c;white-space:nowrap;font-family:'DM Sans',sans-serif">Salin</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="success-desc" style="font-size:.76rem">
+      Kamu tidak sendirian. Ada yang peduli.
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// KONFIGURASI — EDIT DI SINI
+// ═══════════════════════════════════════════════════════
+const CONFIG = {
+  // Formspree endpoint lo
+  // Cara dapet:
+  // 1. Buka formspree.io → Sign up gratis
+  // 2. Klik "New Form" → kasih nama "Teman Curhat"
+  // 3. Copy endpoint-nya, bentuknya: https://formspree.io/f/XXXXXXXX
+  formspreeUrl: "https://formspree.io/f/xvzvjzpb",
+};
+// ═══════════════════════════════════════════════════════
+
+let selectedSlot = null;
+let selectedTopics = [];
+
+function pilihSlot(btn) {
+  if (btn.classList.contains("full")) return;
+  document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("selected"));
+  btn.classList.add("selected");
+  selectedSlot = btn.dataset.slot;
+  document.getElementById("err-slot").style.display = "none";
+}
+
+function pilihTopik(btn) {
+  btn.classList.toggle("selected");
+  const topik = btn.textContent;
+  if (btn.classList.contains("selected")) {
+    selectedTopics.push(topik);
+  } else {
+    selectedTopics = selectedTopics.filter(t => t !== topik);
+  }
+  document.getElementById("err-topik").style.display = "none";
+}
+
+async function kirimForm() {
+  let valid = true;
+
+  if (!selectedSlot) {
+    document.getElementById("err-slot").style.display = "block";
+    valid = false;
+  }
+  if (selectedTopics.length === 0) {
+    document.getElementById("err-topik").style.display = "block";
+    valid = false;
+  }
+  if (!valid) return;
+
+  const btn = document.querySelector(".btn-submit");
+  btn.disabled = true;
+  btn.textContent = "Mengirim...";
+
+  const [hari, jam] = selectedSlot.split("|");
+  const cerita = document.getElementById("cerita").value.trim();
+  const topikStr = selectedTopics.join(", ");
+
+  try {
+    const res = await fetch(CONFIG.formspreeUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        jadwal: `${hari}, ${jam}`,
+        topik: topikStr,
+        cerita: cerita || "(tidak diisi)",
+        _subject: `[Teman Curhat] Pendaftaran Sesi - ${hari} ${jam}`,
+      }),
+    });
+
+    if (res.ok) {
+      document.getElementById("success-slot-text").textContent = `${hari} · ${jam}`;
+      document.getElementById("form-screen").style.display = "none";
+      document.getElementById("success-screen").style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      alert("Gagal mengirim. Coba lagi ya 🙏");
+      btn.disabled = false;
+      btn.textContent = "Daftar Sesi Curhat →";
+    }
+  } catch (e) {
+    alert("Tidak ada koneksi internet. Coba lagi ya 🙏");
+    btn.disabled = false;
+    btn.textContent = "Daftar Sesi Curhat →";
+  }
+}
+
+function copyLink() {
+  const link = "https://teman-curhat.netlify.app";
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById("copy-btn");
+    btn.textContent = "Tersalin ✓";
+    btn.style.background = "var(--green)";
+    setTimeout(() => {
+      btn.textContent = "Salin";
+      btn.style.background = "var(--gold)";
+    }, 2000);
+  }).catch(() => {
+    // Fallback untuk browser yang tidak support clipboard API
+    const el = document.createElement("textarea");
+    el.value = "https://teman-curhat.netlify.app";
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand("copy");
+    document.body.removeChild(el);
+    const btn = document.getElementById("copy-btn");
+    btn.textContent = "Tersalin ✓";
+    btn.style.background = "var(--green)";
+    setTimeout(() => {
+      btn.textContent = "Salin";
+      btn.style.background = "var(--gold)";
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
