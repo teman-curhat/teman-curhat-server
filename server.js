@@ -150,9 +150,13 @@ io.on("connection", (socket) => {
     const msg = { role, text, ts: Date.now() };
     session.messages.push(msg);
 
-    // Kirim ke KEDUA pihak
-    io.to(session.talkerId).emit("chat:message", msg);
-    io.to(session.listenerId).emit("chat:message", msg);
+    console.log("MSG from", role, "| talkerId:", session.talkerId, "| listenerId:", session.listenerId);
+
+    // Kirim ke pengirim
+    socket.emit("chat:message", msg);
+    // Kirim ke pihak lain
+    const otherId = role === "talker" ? session.listenerId : session.talkerId;
+    io.to(otherId).emit("chat:message", msg);
 
     moderators.forEach((modId) =>
       io.to(modId).emit("mod:message", { sessionId, msg })
