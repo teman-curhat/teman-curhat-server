@@ -699,9 +699,10 @@ function sendMsg() {
 function appendMessage(msg) {
   const box = document.getElementById("chat-box");
   const div = document.createElement("div");
-  // isOwn: true = pesan sendiri (kanan, kuning)
-  // isOwn: false/undefined = pesan orang lain (kiri, gelap)
-  div.className = `bubble ${msg.isOwn ? "listener" : "talker"}`;
+  // Pesan dari role yang sama dengan saya = kanan kuning (milik sendiri)
+  // Pesan dari role berbeda = kiri gelap (dari orang lain)
+  const isMine = msg.role === myRole;
+  div.className = `bubble ${isMine ? "listener" : "talker"}`;
   const time = new Date(msg.ts).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
   div.innerHTML = `${escHtml(msg.text)}<div class="btime">${time}</div>`;
   box.appendChild(div);
