@@ -29,8 +29,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint
-app.get("/", (req, res) => res.send("Teman Curhat Server OK"));
+// Serve static files from public folder
+const path = require("path");
+app.use(express.static(path.join(__dirname, "public")));
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+app.get("/appointment", (req, res) => res.sendFile(path.join(__dirname, "public", "appointment.html")));
 
 let listeners = {};
 let talkers = {};
