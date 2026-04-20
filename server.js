@@ -11,8 +11,26 @@ const LISTENER_SECRET = process.env.LISTENER_SECRET || "listener123";
 const MODERATOR_SECRET = process.env.MODERATOR_SECRET || "mod999";
 
 const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
+  cors: { 
+    origin: "*", 
+    methods: ["GET", "POST"],
+    credentials: false
+  },
+  allowEIO3: true,
+  transports: ["websocket", "polling"],
 });
+
+// Handle CORS for Express
+app.use(cors());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "*");
+  next();
+});
+
+// Health check endpoint
+app.get("/", (req, res) => res.send("Teman Curhat Server OK"));
 
 let listeners = {};
 let talkers = {};
