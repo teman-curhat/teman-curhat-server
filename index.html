@@ -304,14 +304,7 @@ let myRole = null;
 // ─── SOCKET ──────────────────────────────────────────────
 function initSocket() {
   if (socket && socket.connected) return;
-  socket = io(SERVER_URL, { 
-    transports: ["polling", "websocket"],
-    upgrade: true,
-    forceNew: true,
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000,
-  });
+  socket = io(SERVER_URL, { transports: ["websocket", "polling"] });
 
   socket.on("connect_error", () => showToast("⚠️ Tidak dapat terhubung ke server"));
   socket.on("error", ({ message }) => showToast("❌ " + message));
