@@ -22,25 +22,8 @@
   }
   @media print { body { display: none !important; } }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--cream);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 300;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, #1e1a0e 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
+  body { background: var(--bg); color: var(--cream); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 0%, #1e1a0e 0%, transparent 70%); pointer-events: none; z-index: 0; }
   .wrap { position: relative; z-index: 1; width: 100%; max-width: 480px; }
   .landing { text-align: center; animation: fadeUp .6s ease both; }
   .logo { font-family: 'Lora', serif; font-size: 2.4rem; font-weight: 600; color: var(--gold2); letter-spacing: -0.5px; line-height: 1; }
@@ -115,57 +98,25 @@
 </head>
 <body>
 <div class="wrap">
-
-  <!-- LANDING -->
   <div class="landing" id="screen-landing">
     <div class="logo">Teman <span>Curhat</span></div>
     <div class="tagline">Ruang aman untuk bercerita</div>
     <div class="divider"></div>
-    <button class="role-btn" onclick="showScreen('talker-join')">
-      <span class="icon">💬</span>
-      <div><div class="rb-title">Saya ingin curhat</div><div class="rb-desc">Ceritakan apa yang kamu rasakan secara anonim</div></div>
-    </button>
-    <button class="role-btn" onclick="showScreen('listener-join')">
-      <span class="icon">🫂</span>
-      <div><div class="rb-title">Saya listener</div><div class="rb-desc">Siap mendengarkan dan menemani</div></div>
-    </button>
-    <button class="role-btn" onclick="showScreen('mod-join')" style="opacity:.5">
-      <span class="icon">🔒</span>
-      <div><div class="rb-title">Moderator</div><div class="rb-desc">Akses khusus pengelola</div></div>
-    </button>
+    <button class="role-btn" onclick="showScreen('talker-join')"><span class="icon">💬</span><div><div class="rb-title">Saya ingin curhat</div><div class="rb-desc">Ceritakan apa yang kamu rasakan secara anonim</div></div></button>
+    <button class="role-btn" onclick="showScreen('listener-join')"><span class="icon">🫂</span><div><div class="rb-title">Saya listener</div><div class="rb-desc">Siap mendengarkan dan menemani</div></div></button>
+    <button class="role-btn" onclick="showScreen('mod-join')" style="opacity:.5"><span class="icon">🔒</span><div><div class="rb-title">Moderator</div><div class="rb-desc">Akses khusus pengelola</div></div></button>
   </div>
-
-  <!-- TALKER JOIN -->
   <div class="screen" id="screen-talker-join">
     <div class="back-link" onclick="showScreen('landing')">← Kembali</div>
-    <div class="card">
-      <h2>Halo 👋</h2>
-      <p class="sub">Tidak perlu nama. Tidak ada yang menghakimi di sini.</p>
-      <p style="font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:20px">Kami akan menghubungkan kamu dengan seorang pendengar yang siap menemani. Semua percakapan bersifat anonim dan tidak disimpan.</p>
-      <button class="btn btn-primary btn-full" onclick="talkerJoin()">Mulai Cerita</button>
-    </div>
+    <div class="card"><h2>Halo 👋</h2><p class="sub">Tidak perlu nama. Tidak ada yang menghakimi di sini.</p><p style="font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:20px">Kami akan menghubungkan kamu dengan seorang pendengar yang siap menemani. Semua percakapan bersifat anonim dan tidak disimpan.</p><button class="btn btn-primary btn-full" onclick="talkerJoin()">Mulai Cerita</button></div>
   </div>
-
-  <!-- TALKER WAITING -->
   <div class="screen" id="screen-talker-waiting">
-    <div class="status-box">
-      <div class="status-icon pulse">🕰️</div>
-      <div class="status-title">Mencari pendengar...</div>
-      <div class="status-desc">Semua pendengar sedang sibuk.<br>Kamu akan diberi tahu saat ada yang tersedia.</div>
-    </div>
+    <div class="status-box"><div class="status-icon pulse">🕰️</div><div class="status-title">Mencari pendengar...</div><div class="status-desc">Semua pendengar sedang sibuk.<br>Kamu akan diberi tahu saat ada yang tersedia.</div></div>
     <button class="btn btn-ghost btn-full" onclick="cancelQueue()">Batalkan</button>
   </div>
-
-  <!-- TALKER PENDING -->
   <div class="screen" id="screen-talker-pending">
-    <div class="status-box">
-      <div class="status-icon pulse">✨</div>
-      <div class="status-title">Pendengar ditemukan!</div>
-      <div class="status-desc">Menunggu konfirmasi pendengar...</div>
-    </div>
+    <div class="status-box"><div class="status-icon pulse">✨</div><div class="status-title">Pendengar ditemukan!</div><div class="status-desc">Menunggu konfirmasi pendengar...</div></div>
   </div>
-
-  <!-- CHAT -->
   <div class="screen" id="screen-chat">
     <div class="chat-header">
       <div class="chat-role"><span class="dot dot-green"></span>Sesi aktif · <strong id="chat-role-label">—</strong></div>
@@ -187,14 +138,8 @@
       <button class="btn btn-primary" onclick="sendMsg()">→</button>
     </div>
   </div>
-
-  <!-- SESSION ENDED + FEEDBACK -->
   <div class="screen" id="screen-ended">
-    <div class="status-box">
-      <div class="status-icon">🌿</div>
-      <div class="status-title">Sesi selesai</div>
-      <div class="status-desc" id="ended-msg">Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏</div>
-    </div>
+    <div class="status-box"><div class="status-icon">🌿</div><div class="status-title">Sesi selesai</div><div class="status-desc" id="ended-msg">Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏</div></div>
     <div id="feedback-section">
       <div class="card" style="margin-top:12px">
         <h2 style="font-size:1rem;margin-bottom:6px">Bagaimana perasaanmu? 💭</h2>
@@ -217,71 +162,23 @@
       <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="resetApp()">Kembali ke Beranda</button>
     </div>
   </div>
-
-  <!-- LISTENER JOIN -->
   <div class="screen" id="screen-listener-join">
     <div class="back-link" onclick="showScreen('landing')">← Kembali</div>
-    <div class="card">
-      <h2>Login Listener 🫂</h2>
-      <p class="sub">Masuk dengan kode yang diberikan koordinator</p>
-      <label>Nama panggilanmu</label>
-      <input type="text" id="listener-alias" placeholder="mis. Kak Reza" />
-      <label>Kode Listener</label>
-      <input type="password" id="listener-secret" placeholder="••••••••" />
-      <button class="btn btn-primary btn-full" onclick="listenerJoin()">Masuk sebagai Listener</button>
-    </div>
+    <div class="card"><h2>Login Listener 🫂</h2><p class="sub">Masuk dengan kode yang diberikan koordinator</p><label>Nama panggilanmu</label><input type="text" id="listener-alias" placeholder="mis. Kak Reza" /><label>Kode Listener</label><input type="password" id="listener-secret" placeholder="••••••••" /><button class="btn btn-primary btn-full" onclick="listenerJoin()">Masuk sebagai Listener</button></div>
   </div>
-
-  <!-- LISTENER STANDBY -->
   <div class="screen" id="screen-listener-standby">
-    <div class="status-box">
-      <div class="status-icon">🫂</div>
-      <div class="status-title">Kamu online, <span id="listener-name-label">—</span></div>
-      <div class="status-desc">Menunggu seseorang yang butuh teman bicara...</div>
-    </div>
-    <div class="status-box" style="background:var(--surface2)">
-      <div class="status-icon">💡</div>
-      <div class="status-title" style="font-size:.9rem">Tips Mendengarkan</div>
-      <div class="status-desc" style="text-align:left;margin-top:10px;line-height:2">
-        • Dengarkan tanpa menghakimi<br>
-        • Validasi perasaan mereka<br>
-        • Tidak perlu memberi solusi<br>
-        • Hadir dengan tulus 🙏
-      </div>
-    </div>
+    <div class="status-box"><div class="status-icon">🫂</div><div class="status-title">Kamu online, <span id="listener-name-label">—</span></div><div class="status-desc">Menunggu seseorang yang butuh teman bicara...</div></div>
+    <div class="status-box" style="background:var(--surface2)"><div class="status-icon">💡</div><div class="status-title" style="font-size:.9rem">Tips Mendengarkan</div><div class="status-desc" style="text-align:left;margin-top:10px;line-height:2">• Dengarkan tanpa menghakimi<br>• Validasi perasaan mereka<br>• Tidak perlu memberi solusi<br>• Hadir dengan tulus 🙏</div></div>
   </div>
-
-  <!-- LISTENER INCOMING -->
   <div class="screen" id="screen-listener-incoming">
-    <div class="incoming-box">
-      <div class="icon">🔔</div>
-      <div class="incoming-title">Ada yang ingin curhat</div>
-      <div class="incoming-sub">Seseorang membutuhkan teman bicara sekarang.</div>
-      <div class="incoming-actions">
-        <button class="btn btn-primary" onclick="listenerAccept()">Terima 🤝</button>
-        <button class="btn btn-ghost" onclick="listenerReject()">Lewati</button>
-      </div>
-    </div>
+    <div class="incoming-box"><div class="icon">🔔</div><div class="incoming-title">Ada yang ingin curhat</div><div class="incoming-sub">Seseorang membutuhkan teman bicara sekarang.</div><div class="incoming-actions"><button class="btn btn-primary" onclick="listenerAccept()">Terima 🤝</button><button class="btn btn-ghost" onclick="listenerReject()">Lewati</button></div></div>
   </div>
-
-  <!-- MODERATOR JOIN -->
   <div class="screen" id="screen-mod-join">
     <div class="back-link" onclick="showScreen('landing')">← Kembali</div>
-    <div class="card">
-      <h2>🔒 Moderator</h2>
-      <p class="sub">Akses khusus pengelola Teman Curhat</p>
-      <label>Moderator Password</label>
-      <input type="password" id="mod-secret" placeholder="••••••••" onkeydown="if(event.key==='Enter')modJoin()" />
-      <button class="btn btn-primary btn-full" onclick="modJoin()">Masuk</button>
-    </div>
+    <div class="card"><h2>🔒 Moderator</h2><p class="sub">Akses khusus pengelola Teman Curhat</p><label>Moderator Password</label><input type="password" id="mod-secret" placeholder="••••••••" onkeydown="if(event.key==='Enter')modJoin()" /><button class="btn btn-primary btn-full" onclick="modJoin()">Masuk</button></div>
   </div>
-
-  <!-- MODERATOR DASHBOARD -->
   <div class="screen" id="screen-mod-dashboard">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="logo" style="font-size:1.3rem">Teman <span>Curhat</span></div>
-      <div style="font-size:.72rem;color:var(--green)"><span class="dot dot-green"></span>Moderator</div>
-    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div class="logo" style="font-size:1.3rem">Teman <span>Curhat</span></div><div style="font-size:.72rem;color:var(--green)"><span class="dot dot-green"></span>Moderator</div></div>
     <div class="mod-grid">
       <div class="stat-card"><div class="stat-num" id="mod-listener-count">0</div><div class="stat-label">Listener Online</div></div>
       <div class="stat-card"><div class="stat-num" id="mod-session-count">0</div><div class="stat-label">Sesi Aktif</div></div>
@@ -291,33 +188,22 @@
     <h2 style="margin-bottom:10px">Sesi Aktif</h2>
     <div id="mod-sessions"><div class="empty-state">Belum ada sesi aktif</div></div>
   </div>
-
 </div>
-
 <script>
 const SERVER_URL = "https://teman-curhat-server-production.up.railway.app";
-
 let socket = null;
 let currentSession = null;
 let myRole = null;
 
-// ─── SOCKET ──────────────────────────────────────────────
 function initSocket() {
   if (socket && socket.connected) return;
   socket = io(SERVER_URL, { transports: ["websocket", "polling"] });
-
   socket.on("connect_error", () => showToast("⚠️ Tidak dapat terhubung ke server"));
   socket.on("error", ({ message }) => showToast("❌ " + message));
-
-  socket.on("listener:joined", ({ alias }) => {
-    document.getElementById("listener-name-label").textContent = alias;
-    showScreen("listener-standby");
-  });
-
+  socket.on("listener:joined", ({ alias }) => { document.getElementById("listener-name-label").textContent = alias; showScreen("listener-standby"); });
   socket.on("listener:talker_waiting", () => showScreen("listener-incoming"));
   socket.on("talker:waiting", () => showScreen("talker-pending"));
   socket.on("talker:queued", () => showScreen("talker-waiting"));
-
   socket.on("session:start", ({ sessionId, listenerMode }) => {
     currentSession = sessionId;
     myRole = listenerMode ? "listener" : "talker";
@@ -327,102 +213,48 @@ function initSocket() {
     showScreen("chat");
     startTimer();
   });
-
-  socket.on("chat:message", (msg) => {
-    // Pesan dari server SELALU dari pihak lain
-    appendMessage(msg.text, false, msg.ts);
-  });
-
+  socket.on("chat:message", (msg) => { appendMessage(msg.text, false, msg.ts); });
   socket.on("session:ended", ({ byModerator, listenerLeft, talkerLeft } = {}) => {
-    stopTimer();
-    stopVoice();
-    currentSession = null;
+    stopTimer(); stopVoice(); currentSession = null;
     let msg = "Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏";
     if (byModerator) msg = "Sesi diakhiri oleh moderator.";
     else if (listenerLeft) msg = "Pendengar telah meninggalkan sesi.";
     else if (talkerLeft) msg = "Pengguna telah meninggalkan sesi.";
     document.getElementById("ended-msg").innerHTML = msg;
-
-    if (myRole === "listener") {
-      setTimeout(() => showScreen("listener-standby"), 800);
-    } else {
-      selectedMood = null;
-      document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected"));
-      document.getElementById("feedback-text").value = "";
-      document.getElementById("feedback-btn").disabled = false;
-      document.getElementById("feedback-btn").textContent = "Kirim Feedback →";
-      showScreen("ended");
-    }
+    if (myRole === "listener") { setTimeout(() => showScreen("listener-standby"), 800); }
+    else { selectedMood = null; document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected")); document.getElementById("feedback-text").value = ""; document.getElementById("feedback-btn").disabled = false; document.getElementById("feedback-btn").textContent = "Kirim Feedback →"; showScreen("ended"); }
   });
-
   socket.on("session:no_listener", () => showScreen("talker-waiting"));
   socket.on("mod:joined", () => showScreen("mod-dashboard"));
-
   socket.on("mod:update", (state) => {
     document.getElementById("mod-listener-count").textContent = state.listeners.length;
     document.getElementById("mod-session-count").textContent = state.sessions.length;
     document.getElementById("mod-queue-count").textContent = state.queue;
     document.getElementById("mod-talker-count").textContent = state.talkers.length;
     const container = document.getElementById("mod-sessions");
-    if (state.sessions.length === 0) {
-      container.innerHTML = '<div class="empty-state">Belum ada sesi aktif</div>';
-    } else {
-      container.innerHTML = state.sessions.map(s => `
-        <div class="session-item">
-          <div class="session-info">
-            <div class="si-title"><span class="dot dot-green"></span>${s.listenerAlias}</div>
-            <div class="si-sub">${s.messageCount} pesan · ${new Date(s.startTime).toLocaleTimeString('id-ID')}</div>
-          </div>
-          <button class="btn btn-danger" style="padding:6px 12px;font-size:.75rem" onclick="modEndSession('${s.sessionId}')">Akhiri</button>
-        </div>
-      `).join('');
-    }
+    if (state.sessions.length === 0) { container.innerHTML = '<div class="empty-state">Belum ada sesi aktif</div>'; }
+    else { container.innerHTML = state.sessions.map(s => `<div class="session-item"><div class="session-info"><div class="si-title"><span class="dot dot-green"></span>${s.listenerAlias}</div><div class="si-sub">${s.messageCount} pesan · ${new Date(s.startTime).toLocaleTimeString('id-ID')}</div></div><button class="btn btn-danger" style="padding:6px 12px;font-size:.75rem" onclick="modEndSession('${s.sessionId}')">Akhiri</button></div>`).join(''); }
   });
 }
 
-// ─── ROLE ACTIONS ─────────────────────────────────────────
-function talkerJoin() {
-  myRole = "talker";
-  initSocket();
-  socket.emit("talker:join");
-}
-
-function cancelQueue() {
-  socket.disconnect();
-  socket = null;
-  showScreen("landing");
-}
-
+function talkerJoin() { myRole = "talker"; initSocket(); socket.emit("talker:join"); }
+function cancelQueue() { socket.disconnect(); socket = null; showScreen("landing"); }
 function listenerJoin() {
   const alias = document.getElementById("listener-alias").value.trim() || "Listener";
   const secret = document.getElementById("listener-secret").value.trim();
   if (!secret) { showToast("Masukkan kode listener dulu ya"); return; }
-  myRole = "listener";
-  initSocket();
+  myRole = "listener"; initSocket();
   socket.emit("listener:join", { secret, alias });
 }
-
 function listenerAccept() { socket.emit("listener:accept"); }
 function listenerReject() { socket.emit("listener:reject"); showScreen("listener-standby"); }
+function modJoin() { const secret = document.getElementById("mod-secret").value.trim(); if (!secret) return; myRole = "moderator"; initSocket(); socket.emit("mod:join", { secret }); }
+function modEndSession(sessionId) { if (confirm("Akhiri sesi ini?")) socket.emit("mod:end_session", { sessionId }); }
 
-function modJoin() {
-  const secret = document.getElementById("mod-secret").value.trim();
-  if (!secret) return;
-  myRole = "moderator";
-  initSocket();
-  socket.emit("mod:join", { secret });
-}
-
-function modEndSession(sessionId) {
-  if (confirm("Akhiri sesi ini?")) socket.emit("mod:end_session", { sessionId });
-}
-
-// ─── CHAT ─────────────────────────────────────────────────
 function sendMsg() {
   const input = document.getElementById("chat-input");
   const text = input.value.trim();
   if (!text || !currentSession) return;
-  // Tampilkan pesan sendiri langsung (mine = true)
   appendMessage(text, true, Date.now());
   socket.emit("chat:message", { sessionId: currentSession, text });
   input.value = "";
@@ -432,7 +264,6 @@ function sendMsg() {
 function appendMessage(text, isMine, ts) {
   const box = document.getElementById("chat-box");
   const div = document.createElement("div");
-  // mine = kanan kuning, theirs = kiri gelap
   div.className = `bubble ${isMine ? "mine" : "theirs"}`;
   const time = new Date(ts).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
   div.innerHTML = `${escHtml(text)}<div class="btime">${time}</div>`;
@@ -440,195 +271,118 @@ function appendMessage(text, isMine, ts) {
   box.scrollTop = box.scrollHeight;
 }
 
-// ─── VOICE TO TEXT ────────────────────────────────────────
 let recognition = null;
 let isListening = false;
-
 function toggleVoice() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    showToast("Browser kamu tidak support voice. Coba Chrome ya.");
-    return;
-  }
-
-  if (isListening) {
-    stopVoice();
-    return;
-  }
-
+  if (!SpeechRecognition) { showToast("Browser kamu tidak support voice. Coba Chrome ya."); return; }
+  if (isListening) { stopVoice(); return; }
   recognition = new SpeechRecognition();
-  recognition.lang = "id-ID";
-  recognition.continuous = false;
-  recognition.interimResults = true;
-
+  recognition.lang = "id-ID"; recognition.continuous = false; recognition.interimResults = true;
   const btn = document.getElementById("voice-btn");
   const input = document.getElementById("chat-input");
-
-  recognition.onstart = () => {
-    isListening = true;
-    btn.classList.add("listening");
-    btn.textContent = "🔴";
-    showToast("🎤 Sedang mendengarkan...");
-  };
-
-  recognition.onresult = (e) => {
-    const transcript = Array.from(e.results)
-      .map(r => r[0].transcript)
-      .join("");
-    input.value = transcript;
-  };
-
-  recognition.onend = () => {
-    isListening = false;
-    btn.classList.remove("listening");
-    btn.textContent = "🎤";
-    // Auto kirim kalau ada teks
-    if (input.value.trim()) sendMsg();
-  };
-
-  recognition.onerror = (e) => {
-    isListening = false;
-    btn.classList.remove("listening");
-    btn.textContent = "🎤";
-    if (e.error !== "no-speech") showToast("❌ Voice error: " + e.error);
-  };
-
+  recognition.onstart = () => { isListening = true; btn.classList.add("listening"); btn.textContent = "🔴"; showToast("🎤 Sedang mendengarkan..."); };
+  recognition.onresult = (e) => { input.value = Array.from(e.results).map(r => r[0].transcript).join(""); };
+  recognition.onend = () => { isListening = false; btn.classList.remove("listening"); btn.textContent = "🎤"; if (input.value.trim()) sendMsg(); };
+  recognition.onerror = (e) => { isListening = false; btn.classList.remove("listening"); btn.textContent = "🎤"; if (e.error !== "no-speech") showToast("❌ Voice error: " + e.error); };
   recognition.start();
 }
+function stopVoice() { if (recognition) { recognition.stop(); recognition = null; } isListening = false; const btn = document.getElementById("voice-btn"); if (btn) { btn.classList.remove("listening"); btn.textContent = "🎤"; } }
 
-function stopVoice() {
-  if (recognition) {
-    recognition.stop();
-    recognition = null;
-  }
-  isListening = false;
-  const btn = document.getElementById("voice-btn");
-  if (btn) { btn.classList.remove("listening"); btn.textContent = "🎤"; }
-}
-
-// ─── TIMER ────────────────────────────────────────────────
 const SESSION_DURATION = 90 * 60;
 let timerInterval = null;
 let timerSeconds = SESSION_DURATION;
-
 function startTimer() {
-  timerSeconds = SESSION_DURATION;
-  updateTimerDisplay();
-  clearInterval(timerInterval);
+  timerSeconds = SESSION_DURATION; updateTimerDisplay(); clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-    timerSeconds--;
-    updateTimerDisplay();
+    timerSeconds--; updateTimerDisplay();
     if (timerSeconds === 10 * 60) { showToast("⏱ 10 menit lagi sesi berakhir"); document.getElementById("timer-label").style.color = "var(--gold)"; }
     if (timerSeconds === 5 * 60) { showToast("⚠️ 5 menit lagi sesi berakhir"); document.getElementById("timer-label").style.color = "#e07a30"; }
-    if (timerSeconds <= 0) {
-      clearInterval(timerInterval);
-      showToast("⏰ Waktu sesi habis");
-      setTimeout(() => { if (currentSession) socket.emit("session:end", { sessionId: currentSession }); }, 1500);
-    }
+    if (timerSeconds <= 0) { clearInterval(timerInterval); showToast("⏰ Waktu sesi habis"); setTimeout(() => { if (currentSession) socket.emit("session:end", { sessionId: currentSession }); }, 1500); }
   }, 1000);
 }
-
 function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
-
 function updateTimerDisplay() {
   const h = Math.floor(timerSeconds / 3600);
   const m = Math.floor((timerSeconds % 3600) / 60);
   const s = timerSeconds % 60;
-  const label = h > 0 ? `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}` : `${m}:${String(s).padStart(2,"0")}`;
-  document.getElementById("timer-label").textContent = label;
+  document.getElementById("timer-label").textContent = h > 0 ? `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}` : `${m}:${String(s).padStart(2,"0")}`;
   const pct = (timerSeconds / SESSION_DURATION) * 100;
   const bar = document.getElementById("timer-bar");
   bar.style.width = pct + "%";
   bar.style.background = pct > 30 ? "var(--gold)" : pct > 10 ? "#e07a30" : "var(--red)";
 }
+function endSession() { if (!confirm("Yakin mau mengakhiri sesi?")) return; stopTimer(); stopVoice(); socket.emit("session:end", { sessionId: currentSession }); }
 
-function endSession() {
-  if (!confirm("Yakin mau mengakhiri sesi?")) return;
-  stopTimer();
-  stopVoice();
-  socket.emit("session:end", { sessionId: currentSession });
-}
-
-// ─── FEEDBACK ─────────────────────────────────────────────
-const FORMSPREE_FEEDBACK = "https://formspree.io/f/xvzvjzpb";
+const FEEDBACK_KEY = "aef72916-a9d4-424f-b8ee-eb5d5b15c0c2";
 let selectedMood = null;
-
-function pilihMood(btn) {
-  document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected"));
-  btn.classList.add("selected");
-  selectedMood = btn.dataset.mood;
-}
-
+function pilihMood(btn) { document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected")); btn.classList.add("selected"); selectedMood = btn.dataset.mood; }
 async function kirimFeedback() {
   const text = document.getElementById("feedback-text").value.trim();
   if (!selectedMood && !text) { resetApp(); return; }
   const btn = document.getElementById("feedback-btn");
-  btn.disabled = true;
-  btn.textContent = "Mengirim...";
+  btn.disabled = true; btn.textContent = "Mengirim...";
   try {
-    await fetch(FORMSPREE_FEEDBACK, {
+    await fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({ perasaan: selectedMood || "(tidak dipilih)", pesan: text || "(tidak diisi)", _subject: "[Teman Curhat] Feedback Sesi" }),
+      body: JSON.stringify({ access_key: FEEDBACK_KEY, subject: "[Teman Curhat] Feedback Sesi", perasaan: selectedMood || "(tidak dipilih)", pesan: text || "(tidak diisi)" }),
     });
   } catch(e) {}
   document.getElementById("feedback-section").style.display = "none";
   document.getElementById("feedback-done").style.display = "block";
 }
 
-// ─── NAVIGATION ───────────────────────────────────────────
 function showScreen(name) {
-  document.querySelectorAll(".screen, .landing").forEach(el => {
-    el.classList.remove("active");
-    el.style.display = "none";
-  });
+  document.querySelectorAll(".screen, .landing").forEach(el => { el.classList.remove("active"); el.style.display = "none"; });
   const el = document.getElementById("screen-" + name);
   if (el) {
-    el.style.display = "block";
-    el.classList.add("active");
-    if (name === "ended") {
-      const fs = document.getElementById("feedback-section");
-      const fd = document.getElementById("feedback-done");
-      if (fs) fs.style.display = "block";
-      if (fd) fd.style.display = "none";
-    }
+    el.style.display = "block"; el.classList.add("active");
+    if (name === "ended") { const fs = document.getElementById("feedback-section"); const fd = document.getElementById("feedback-done"); if (fs) fs.style.display = "block"; if (fd) fd.style.display = "none"; }
   }
 }
 
 function resetApp() {
   if (socket) { socket.disconnect(); socket = null; }
-  myRole = null; currentSession = null;
-  stopVoice();
+  myRole = null; currentSession = null; stopVoice();
   document.getElementById("listener-secret").value = "";
   document.getElementById("mod-secret").value = "";
   showScreen("landing");
 }
 
-// ─── UTILS ────────────────────────────────────────────────
-function escHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function escHtml(t) { return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 let toastTimer = null;
 function showToast(msg) {
   const existing = document.querySelector(".toast");
   if (existing) existing.remove();
   const el = document.createElement("div");
-  el.className = "toast";
-  el.textContent = msg;
+  el.className = "toast"; el.textContent = msg;
   document.body.appendChild(el);
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.remove(), 3000);
 }
 
-document.addEventListener("visibilitychange", () => {
-  document.body.style.filter = document.hidden ? "blur(20px)" : "";
-});
+// Anti screenshot
+document.addEventListener("visibilitychange", () => { document.body.style.filter = document.hidden ? "blur(20px)" : ""; });
 document.addEventListener("contextmenu", e => e.preventDefault());
 document.addEventListener("keydown", (e) => {
   if (e.key === "PrintScreen" || (e.metaKey && e.shiftKey && ["3","4","5"].includes(e.key)) || (e.ctrlKey && e.key === "p")) {
-    e.preventDefault();
-    showToast("📵 Screenshot tidak diperbolehkan demi privasi pengguna");
+    e.preventDefault(); showToast("📵 Screenshot tidak diperbolehkan demi privasi pengguna");
+  }
+});
+
+// Auto akhiri sesi kalau browser ditutup
+window.addEventListener("beforeunload", () => {
+  if (currentSession && socket && socket.connected) {
+    socket.emit("session:end", { sessionId: currentSession });
+    socket.disconnect();
+  }
+});
+window.addEventListener("pagehide", () => {
+  if (currentSession && socket && socket.connected) {
+    socket.emit("session:end", { sessionId: currentSession });
+    socket.disconnect();
   }
 });
 
