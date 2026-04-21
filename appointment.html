@@ -338,7 +338,7 @@
     <div class="success-desc" style="font-size:.84rem;margin-bottom:14px">
       Kalau kamu butuh bicara sekarang dan ada pendengar yang online,<br>kamu bisa langsung masuk ke ruang chat:
     </div>
-    <a href="https://teman-curhat.github.io/teman-curhat-server/" target="_blank" class="btn-chat-now">
+    <a href="https://teman-curhat.github.io/teman-curhat-server/?v=2" target="_blank" class="btn-chat-now">
       💬 Masuk ke Ruang Curhat Sekarang
     </a>
 
@@ -452,7 +452,7 @@ async function kirimForm() {
 }
 
 function copyLink() {
-  const link = "https://teman-curhat.github.io/teman-curhat-server/";
+  const link = "https://teman-curhat.github.io/teman-curhat-server/?v=2";
   navigator.clipboard.writeText(link).then(() => {
     const btn = document.getElementById("copy-btn");
     btn.textContent = "Tersalin ✓";
@@ -464,7 +464,7 @@ function copyLink() {
   }).catch(() => {
     // Fallback untuk browser yang tidak support clipboard API
     const el = document.createElement("textarea");
-    el.value = "https://teman-curhat.github.io/teman-curhat-server/";
+    el.value = "https://teman-curhat.github.io/teman-curhat-server/?v=2";
     document.body.appendChild(el);
     el.select();
     document.execCommand("copy");
