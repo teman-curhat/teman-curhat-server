@@ -271,29 +271,17 @@
              Format: data-slot="HARI|JAM"
              Tambah class "full" kalau slot sudah penuh
              ═══════════════════════════════════════════════════ -->
-        <button class="slot-btn" data-slot="Senin|19.00 WIB" onclick="pilihSlot(this)">
-          <div class="slot-day">Senin</div>
-          <div class="slot-time">19.00 WIB</div>
+        <button class="slot-btn" data-slot="Selasa|20.00 WIB" onclick="pilihSlot(this)">
+          <div class="slot-day">Selasa</div>
+          <div class="slot-time">20.00 WIB</div>
         </button>
-        <button class="slot-btn" data-slot="Rabu|19.00 WIB" onclick="pilihSlot(this)">
+        <button class="slot-btn" data-slot="Rabu|20.00 WIB" onclick="pilihSlot(this)">
           <div class="slot-day">Rabu</div>
-          <div class="slot-time">19.00 WIB</div>
+          <div class="slot-time">20.00 WIB</div>
         </button>
         <button class="slot-btn" data-slot="Jumat|20.00 WIB" onclick="pilihSlot(this)">
           <div class="slot-day">Jumat</div>
           <div class="slot-time">20.00 WIB</div>
-        </button>
-        <button class="slot-btn" data-slot="Sabtu|10.00 WIB" onclick="pilihSlot(this)">
-          <div class="slot-day">Sabtu</div>
-          <div class="slot-time">10.00 WIB</div>
-        </button>
-        <button class="slot-btn" data-slot="Sabtu|19.00 WIB" onclick="pilihSlot(this)">
-          <div class="slot-day">Sabtu</div>
-          <div class="slot-time">19.00 WIB</div>
-        </button>
-        <button class="slot-btn" data-slot="Minggu|10.00 WIB" onclick="pilihSlot(this)">
-          <div class="slot-day">Minggu</div>
-          <div class="slot-time">10.00 WIB</div>
         </button>
       </div>
       <div class="error-msg" id="err-slot">Pilih jadwal dulu ya 🙏</div>
@@ -360,18 +348,6 @@
     </div>
 
     <div class="divider"></div>
-
-    <!-- INFO PENTING -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:left;margin-bottom:16px">
-      <div style="font-size:.82rem;color:var(--gold2);font-family:'Lora',serif;margin-bottom:10px">📋 Hal penting yang perlu kamu tahu:</div>
-      <div style="font-size:.78rem;color:var(--muted);line-height:2">
-        ⏰ Harap masuk tepat waktu sesuai jadwal<br>
-        🕐 Pendengar akan menunggu maksimal <strong style="color:var(--cream)">30 menit</strong> dari waktu janji<br>
-        📱 Disarankan menggunakan <strong style="color:var(--cream)">HP</strong> untuk pengalaman terbaik<br>
-        🔒 Semua percakapan bersifat anonim & aman
-      </div>
-    </div>
-
     <div class="success-desc" style="font-size:.76rem">
       Kamu tidak sendirian. Ada yang peduli.
     </div>
@@ -384,12 +360,7 @@
 // KONFIGURASI — EDIT DI SINI
 // ═══════════════════════════════════════════════════════
 const CONFIG = {
-  // Formspree endpoint lo
-  // Cara dapet:
-  // 1. Buka formspree.io → Sign up gratis
-  // 2. Klik "New Form" → kasih nama "Teman Curhat"
-  // 3. Copy endpoint-nya, bentuknya: https://formspree.io/f/XXXXXXXX
-  formspreeUrl: "https://formspree.io/f/xvzvjzpb",
+  web3formsKey: "aef72916-a9d4-424f-b8ee-eb5d5b15c0c2",
 };
 // ═══════════════════════════════════════════════════════
 
@@ -437,14 +408,15 @@ async function kirimForm() {
   const topikStr = selectedTopics.join(", ");
 
   try {
-    const res = await fetch(CONFIG.formspreeUrl, {
+    const res = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify({
+        access_key: CONFIG.web3formsKey,
+        subject: `[Teman Curhat] Pendaftaran Sesi - ${hari} ${jam}`,
         jadwal: `${hari}, ${jam}`,
         topik: topikStr,
         cerita: cerita || "(tidak diisi)",
-        _subject: `[Teman Curhat] Pendaftaran Sesi - ${hari} ${jam}`,
       }),
     });
 
