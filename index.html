@@ -372,19 +372,7 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Auto akhiri sesi kalau browser ditutup
-window.addEventListener("beforeunload", () => {
-  if (currentSession && socket && socket.connected) {
-    socket.emit("session:end", { sessionId: currentSession });
-    socket.disconnect();
-  }
-});
-window.addEventListener("pagehide", () => {
-  if (currentSession && socket && socket.connected) {
-    socket.emit("session:end", { sessionId: currentSession });
-    socket.disconnect();
-  }
-});
+// Sesi tetap aktif meskipun idle atau pindah tab
 
 showScreen("landing");
 </script>
