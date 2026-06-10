@@ -20,6 +20,8 @@
     --muted: #7a7060;
     --green: #4caf7a;
     --red: #c96060;
+    --tg: #229ED9;
+    --tg2: #39b8f0;
     --radius: 12px;
   }
 
@@ -78,7 +80,6 @@
     margin-bottom: 16px;
   }
 
-  /* SLOT GRID */
   .slot-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -116,7 +117,6 @@
   }
   .slot-btn.full .slot-day { text-decoration: line-through; }
 
-  /* TOPIK */
   .topic-grid {
     display: flex;
     flex-wrap: wrap;
@@ -141,7 +141,6 @@
     color: var(--gold2);
   }
 
-  /* TEXTAREA */
   textarea {
     width: 100%;
     background: var(--surface2);
@@ -160,7 +159,6 @@
   textarea:focus { border-color: var(--gold); }
   textarea::placeholder { color: var(--muted); }
 
-  /* PREFERENCE CHIPS */
   .pref-grid {
     display: flex;
     flex-wrap: wrap;
@@ -192,7 +190,6 @@
   }
   .pref-label:first-child { margin-top: 0; }
 
-  /* PRIVACY NOTE */
   .privacy-note {
     background: #1a1f14;
     border: 1px solid #2e3a22;
@@ -205,7 +202,6 @@
   }
   .privacy-note strong { color: #aad080; }
 
-  /* SUBMIT */
   .btn-submit {
     width: 100%;
     background: var(--gold);
@@ -223,13 +219,11 @@
   .btn-submit:hover { background: var(--gold2); }
   .btn-submit:disabled { opacity: .4; cursor: not-allowed; }
 
-  /* SUCCESS */
   .success-screen {
     display: none;
     animation: fadeUp .5s ease both;
   }
 
-  /* CONFIRMED BADGE */
   .confirmed-badge {
     text-align: center;
     padding: 36px 20px 28px;
@@ -258,7 +252,6 @@
     line-height: 1.7;
   }
 
-  /* SLOT CONFIRMED */
   .slot-confirmed {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -296,7 +289,6 @@
     flex-shrink: 0;
   }
 
-  /* INFO BOX */
   .info-box {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -325,7 +317,6 @@
   .info-row-icon { flex-shrink: 0; font-size: .9rem; }
   .info-row strong { color: var(--cream); }
 
-  /* LINK BOX */
   .link-box {
     background: var(--surface);
     border: 1px solid var(--gold);
@@ -382,7 +373,71 @@
     color: #fff;
   }
 
-  /* CLOSING */
+  /* TELEGRAM BOX */
+  .tg-box {
+    background: #0d1e2a;
+    border: 1px solid #1a4a6e;
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 12px;
+  }
+  .tg-box-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .tg-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--tg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .tg-box-title {
+    font-size: .82rem;
+    color: var(--tg2);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .tg-box-title small {
+    display: block;
+    font-size: .72rem;
+    color: #5a8aaa;
+    font-weight: 300;
+    margin-top: 2px;
+  }
+  .tg-box-desc {
+    font-size: .76rem;
+    color: #5a8aaa;
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+  .tg-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--tg);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s;
+  }
+  .tg-btn:hover { background: var(--tg2); }
+  .tg-btn svg { flex-shrink: 0; }
+
   .closing {
     text-align: center;
     padding: 20px 0 8px;
@@ -397,7 +452,6 @@
     margin: 16px auto;
   }
 
-  /* ERROR */
   .error-msg {
     font-size: .76rem;
     color: var(--red);
@@ -423,10 +477,7 @@
     <div class="card">
       <div class="section-title">Pilih Jadwal 🗓️</div>
       <div class="section-sub">Pilih satu slot waktu yang paling cocok buatmu.</div>
-
-      <div class="slot-grid" id="slot-grid">
-        <!-- diisi otomatis oleh JS -->
-      </div>
+      <div class="slot-grid" id="slot-grid"></div>
       <div class="error-msg" id="err-slot">Pilih jadwal dulu ya 🙏</div>
     </div>
 
@@ -539,6 +590,30 @@
       </div>
     </div>
 
+    <!-- TELEGRAM REMINDER BOX -->
+    <div class="tg-box">
+      <div class="tg-box-header">
+        <div class="tg-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.88 13.47l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.832.952-.001-.001-.001 0 0 0l-.564.137z"/>
+          </svg>
+        </div>
+        <div class="tg-box-title">
+          Gabung grup pengingat jadwal
+          <small>Supaya kamu tidak lupa hari sesinya</small>
+        </div>
+      </div>
+      <div class="tg-box-desc">
+        Kami akan kirim reminder sebelum jadwal sesimu. Grup ini juga tempat info update jadwal dari Teman Curhat.
+      </div>
+      <a class="tg-btn" href="https://t.me/+J3MoryO4dlYxYTNl" target="_blank" rel="noopener noreferrer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.88 13.47l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.832.952l-.564.137z"/>
+        </svg>
+        Gabung Grup Telegram
+      </a>
+    </div>
+
     <!-- CLOSING -->
     <div class="closing">
       <div class="divider"></div>
@@ -550,16 +625,10 @@
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════
-// KONFIGURASI
-// ═══════════════════════════════════════════════════
 const CONFIG = {
   web3formsKey: "aef72916-a9d4-424f-b8ee-eb5d5b15c0c2",
 };
 
-// Jadwal tetap — edit di sini kalau mau ubah hari/jam
-// dayOfWeek: 0=Minggu 1=Senin 2=Selasa 3=Rabu 4=Kamis 5=Jumat 6=Sabtu
-// cutoffHour: jam berapa slot dianggap lewat (format 24 jam, WIB)
 const SLOTS = [
   { label: "Selasa", dayOfWeek: 2, time: "20.00 WIB", cutoffHour: 20 },
   { label: "Kamis",  dayOfWeek: 4, time: "20.00 WIB", cutoffHour: 20 },
@@ -568,38 +637,21 @@ const SLOTS = [
 
 const BULAN = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
-// ═══════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════
 let selectedSlot = null;
 let selectedTopics = [];
 let selectedGender = "Tidak ada preferensi";
 let selectedAge   = "Tidak ada preferensi";
 
-// ═══════════════════════════════════════════════════
-// TANGGAL DINAMIS
-// Ambil tanggal terdekat untuk hari tertentu.
-// Kalau hari itu sudah lewat (atau jam sudah lewat cutoff), lompat ke minggu depan.
-// ═══════════════════════════════════════════════════
 function getNextDate(targetDay, cutoffHour) {
-  // Konversi ke WIB (UTC+7)
   const nowUTC = new Date();
-  const wibOffset = 7 * 60; // menit
+  const wibOffset = 7 * 60;
   const nowWIB = new Date(nowUTC.getTime() + wibOffset * 60 * 1000);
-
   const todayDay  = nowWIB.getUTCDay();
   const todayHour = nowWIB.getUTCHours();
-
   let diff = targetDay - todayDay;
-
-  // Sudah lewat hari ini (jam cutoff) atau hari sudah lewat minggu ini
-  if (diff < 0 || (diff === 0 && todayHour >= cutoffHour)) {
-    diff += 7;
-  }
-
+  if (diff < 0 || (diff === 0 && todayHour >= cutoffHour)) diff += 7;
   const result = new Date(nowWIB);
   result.setUTCDate(nowWIB.getUTCDate() + diff);
-
   const d = result.getUTCDate();
   const m = result.getUTCMonth();
   return {
@@ -609,19 +661,12 @@ function getNextDate(targetDay, cutoffHour) {
   };
 }
 
-// ═══════════════════════════════════════════════════
-// BUILD SLOT BUTTONS
-// ═══════════════════════════════════════════════════
 function buildSlots() {
   const grid = document.getElementById("slot-grid");
   grid.innerHTML = "";
-
   SLOTS.forEach(slot => {
     const date = getNextDate(slot.dayOfWeek, slot.cutoffHour);
-    // Format untuk email: "Selasa, 13 Mei 2025"
-    // Format untuk display success: "Selasa, 13 Mei · 20.00 WIB"
     const slotData = `${slot.label}, ${date.full}|${slot.time}`;
-
     const btn = document.createElement("button");
     btn.className = "slot-btn";
     btn.dataset.slot = slotData;
@@ -635,9 +680,6 @@ function buildSlots() {
   });
 }
 
-// ═══════════════════════════════════════════════════
-// HANDLERS
-// ═══════════════════════════════════════════════════
 function pilihPref(type, btn) {
   const gridId = type === 'gender' ? 'gender-grid' : 'age-grid';
   document.querySelectorAll(`#${gridId} .pref-chip`).forEach(b => b.classList.remove("selected"));
@@ -700,7 +742,6 @@ async function kirimForm() {
     });
 
     if (res.ok) {
-      // Tampilkan di success: "Selasa, 13 Mei 2025 · 20.00 WIB"
       document.getElementById("success-slot-text").textContent = `${hariTanggal} · ${jam}`;
       document.getElementById("form-screen").style.display   = "none";
       document.getElementById("success-screen").style.display = "block";
@@ -720,13 +761,11 @@ async function kirimForm() {
 function copyLink() {
   const link = "https://teman-curhat.github.io/teman-curhat-server/";
   const btn  = document.getElementById("copy-btn");
-
   const done = () => {
     btn.textContent = "Tersalin ✓";
     btn.classList.add("copied");
     setTimeout(() => { btn.textContent = "Salin"; btn.classList.remove("copied"); }, 2000);
   };
-
   navigator.clipboard.writeText(link).then(done).catch(() => {
     const el = document.createElement("textarea");
     el.value = link;
@@ -738,9 +777,6 @@ function copyLink() {
   });
 }
 
-// ═══════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════
 buildSlots();
 </script>
 </body>
