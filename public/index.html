@@ -211,13 +211,7 @@
         <div class="rb-desc" data-lang="role-wall-desc">Tulis keluh kesahmu atau baca curhatan teman lain</div>
       </div>
     </button>
-    <button class="role-btn" onclick="showScreen('group-rooms')">
-      <span class="icon">🗣️</span>
-      <div>
-        <div class="rb-title" data-lang="role-group-title">Bilik Grup (Chat Topik)</div>
-        <div class="rb-desc" data-lang="role-group-desc">Mengobrol bersama mengenai topik tertentu</div>
-      </div>
-    </button>
+
     <button class="role-btn" onclick="openAppointment()">
       <span class="icon">📅</span>
       <div>
@@ -294,7 +288,6 @@
         <div class="chat-menu-dropdown" id="chat-menu-dropdown">
           <button class="chat-menu-item" onclick="openAppointment()">📅 <span data-lang="menu-appointment">Jadwalkan Sesi</span></button>
           <button class="chat-menu-item" onclick="showScreen('confession-wall')">📮 <span data-lang="menu-wall">Dinding Curhat</span></button>
-          <button class="chat-menu-item" onclick="showScreen('group-rooms')">🗣️ <span data-lang="menu-group">Bilik Grup</span></button>
         </div>
       </div>
     </div>
@@ -766,7 +759,7 @@ function goBack() {
 }
 
 function openAppointment() {
-  window.open("client/public/appointment.html", "_blank");
+  window.open("appointment.html", "_blank");
 }
 
 function toggleChatMenu() {
@@ -843,8 +836,7 @@ async function talkerJoin() {
   // Insert to waiting queue
   const { error } = await sb.from("queue").insert({ 
     talker_id: myId, 
-    status: "waiting",
-    language: currentLang 
+    status: "waiting"
   });
   if(error){ showToast("❌ Gagal bergabung: "+error.message); return; }
 
@@ -983,10 +975,7 @@ function startListenerPolling() {
       if(document.getElementById("screen-listener-incoming").classList.contains("active")) return;
       window._pendingTalkerId = queue[0].talker_id;
       window._pendingQueueId  = queue[0].id;
-      const talkerLang = queue[0].language || "id";
-      document.getElementById("incoming-info-text").innerHTML = talkerLang === "en" 
-        ? "Someone needs to talk. <br><strong>Language Preference: English 🇺🇸</strong>"
-        : "Seseorang membutuhkan teman bicara sekarang. <br><strong>Bahasa: Indonesia 🇮🇩</strong>";
+      document.getElementById("incoming-info-text").innerHTML = "Seseorang membutuhkan teman bicara sekarang.";
       showScreen("incoming");
     } else {
       if(document.getElementById("screen-listener-incoming").classList.contains("active")) {
