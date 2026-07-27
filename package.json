@@ -1,18 +1,11 @@
 {
-  "name": "teman-curhat-server",
+  "name": "teman-curhat",
   "version": "1.0.0",
-  "main": "server.js",
+  "description": "Anonymous peer support chat app",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
-    "uuid": "^9.0.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
+    "install:server": "cd server && npm install",
+    "dev": "cd server && npm run dev",
+    "start": "cd server && npm start",
+    "generate-posts": "cd server && npm run generate-posts"
   }
 }
