@@ -22,19 +22,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve static client public files
-app.use(express.static(path.join(__dirname, "../client/public")));
-app.use(express.static(path.join(__dirname, "../")));
+app.get("/", (req, res) => res.send("Teman Curhat Server OK"));
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/public/index.html"));
-});
-
-// In-memory state only — no DB, no persistence
-let listeners = {};   // socketId -> { alias, busy, socketId }
-let talkers = {};     // socketId -> { socketId, waitingForNotif }
-let sessions = {};    // sessionId -> { talkerId, listenerId, messages[], startTime }
-let waitingQueue = []; // talker socketIds waiting for a listener
+let listeners = {};
+let talkers = {};
+let sessions = {};
+let waitingQueue = [];
 let moderators = new Set();
 
 function getAvailableListener() {
@@ -81,7 +74,6 @@ function endSessionCleanup(sessionId, reason = {}) {
 }
 
 io.on("connection", (socket) => {
-  console.log("Connected:", socket.id);
 
   socket.on("listener:join", ({ secret, alias }) => {
     if (secret !== LISTENER_SECRET) {
