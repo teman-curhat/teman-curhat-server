@@ -6,7 +6,6 @@
 <title>Teman Curhat</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <style>
   :root {
     --bg:#0f0e0c;--surface:#1a1814;--surface2:#242018;--border:#2e2a22;
@@ -188,8 +187,8 @@
       <h2 style="font-size:1rem;margin-bottom:6px" id="t-lm-h2">💌 Tidak ada pendengar?</h2>
       <p class="sub" style="margin-bottom:12px" id="t-lm-sub">Tinggalkan pesan dan kami akan menghubungi kamu, atau daftar sesi terjadwal.</p>
       <div class="tab-row">
-        <button class="tab-btn active" onclick="switchLeaveTab('message')" id="tab-msg-btn">Tinggalkan Pesan</button>
-        <button class="tab-btn" onclick="switchLeaveTab('schedule')" id="tab-sched-btn">Buat Jadwal</button>
+        <button class="tab-btn active" onclick="switchLeaveTab('message')" id="tab-msg-btn" id="t-lm-tab1">Tinggalkan Pesan</button>
+        <button class="tab-btn" onclick="switchLeaveTab('schedule')" id="tab-sched-btn" id="t-lm-tab2">Buat Jadwal</button>
       </div>
       <!-- Tab: Pesan -->
       <div id="leave-message-panel">
@@ -224,9 +223,15 @@
       </div>
     </div>
     <div class="chat-box" id="chat-box"></div>
+    <div class="rec-bar" id="rec-bar">
+      <div class="rec-dot"></div>
+      <div class="rec-label" id="t-rec-label">Sedang merekam...</div>
+      <div class="rec-time" id="rec-time">0:00</div>
+      <button class="rec-cancel" onclick="cancelRecording()" id="t-rec-cancel">✕ Batal</button>
+    </div>
     <div class="chat-input-row">
-      <button class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="Klik untuk bicara">🎤</button>
-      <input type="text" id="chat-input" placeholder="Ketik atau tekan 🎤 untuk bicara..." onkeydown="if(event.key==='Enter')sendMsg()" />
+      <button class="rec-btn" id="rec-btn" onclick="toggleRecording()" title="Voice note">🎙️</button>
+      <input type="text" id="chat-input" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter')sendMsg()" />
       <button class="btn btn-primary" onclick="sendMsg()">→</button>
     </div>
   </div>
@@ -288,7 +293,7 @@
         • Dengarkan tanpa menghakimi<br>• Validasi perasaan mereka<br>• Tidak perlu memberi solusi<br>• Hadir dengan tulus 🙏
       </div>
     </div>
-    <button class="btn btn-ghost btn-full" onclick="resetApp()" id="t-ls-logout">Keluar</button>
+    <button class="btn btn-ghost btn-full" onclick="listenerLogout()" id="t-ls-logout">Keluar</button>
   </div>
 
   <!-- LISTENER INCOMING -->
@@ -351,12 +356,20 @@
 </div>
 
 <script>
-const SERVER_URL = "https://teman-curhat-server-production.up.railway.app";
-const WEB3FORMS_KEY = "aef72916-a9d4-424f-b8ee-eb5d5b15c0c2";
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+const SUPABASE_URL     = "https://acetdjwzrydmoonzpevz.supabase.co";
+const SUPABASE_ANON_KEY= "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjZXRkand6cnlkbW9vbnpwZXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTE2NDYsImV4cCI6MjA5MjgyNzY0Nn0.xOqG_ciBo2LpZGcZ5woZQrXybPdQ9eb3hMn3cwYt2wU";
+const LISTENER_SECRET  = "listener123";
+const MODERATOR_SECRET = "mod999";
+const SESSION_DURATION = 90*60;
+const POLL_MS          = 3000;
+const STALE_MS         = 15000;
+const WEB3FORMS_KEY    = "aef72916-a9d4-424f-b8ee-eb5d5b15c0c2";
+const APPOINTMENT_URL  = "appointment.html";
 
-let socket = null;
-let currentSession = null;
-let myRole = null;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══════════════════════════════════════
 // BILINGUAL
@@ -481,298 +494,98 @@ function setLang(lang) {
   for(const [id,key] of Object.entries(map)){
     const el=document.getElementById(id); if(el && t[key]) el.innerHTML=t[key];
   }
+  // Also update all .t-back spans
   document.querySelectorAll(".t-back").forEach(el=>el.textContent=t.back);
   document.getElementById("chat-input").placeholder = lang==="id"?"Ketik pesan...":"Type a message...";
   document.getElementById("wall-input").placeholder = lang==="id"?"Ceritakan apa yang kamu rasakan...":"Share how you feel...";
+  document.getElementById("leave-msg-text").placeholder = lang==="id"?"Ceritakan sedikit apa yang ingin kamu bicarakan...":"Tell us a bit about what you'd like to talk about...";
+  document.getElementById("tab-msg-btn").textContent = t["lm-tab1"];
+  document.getElementById("tab-sched-btn").textContent = t["lm-tab2"];
 }
 
-// ─── SOCKET ──────────────────────────────────────────────
-function initSocket() {
-  if (socket && socket.connected) return;
-  socket = io(SERVER_URL, { transports: ["websocket", "polling"] });
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let myRole=null,myId=null,myListenerId=null;
+let currentSessionId=null,selectedMood=null;
+let timerInterval=null,timerSeconds=0;
+let pollInterval=null,lastMsgTs=0;
+let sessionAudioFiles=[];
+let mediaRecorder=null,audioChunks=[],isRecording=false;
+let recTimerInterval=null,recSeconds=0;
+let currentAudio=null,currentAudioId=null,audioProgressInterval=null;
 
-  socket.on("connect_error", () => showToast("⚠️ Tidak dapat terhubung ke server"));
-  socket.on("error", ({ message }) => showToast("❌ " + message));
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function genId(){return crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now();}
+function showScreen(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-landing").style.display=name==="landing"?"block":"none";
+  const el=document.getElementById("screen-"+name);
+  if(el){el.classList.add("active");if(name==="wall")loadWall();}
+}
+function showToast(msg,dur=3000){
+  document.querySelector(".toast")?.remove();
+  const t=document.createElement("div");t.className="toast";t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),dur);
+}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});}
+function fmtDur(s){return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;}
+function stopAllPolls(){if(pollInterval){clearInterval(pollInterval);pollInterval=null;}}
+function goAppointment(){window.open(APPOINTMENT_URL,"_blank");}
 
-  socket.on("listener:joined", ({ alias }) => {
-    document.getElementById("listener-name-label").textContent = alias;
-    showScreen("listener-standby");
+// ═══════════════════════════════════════
+// KEEPALIVE FETCH
+// ═══════════════════════════════════════
+function sbPatch(table,filter,body){
+  return fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`,{
+    method:"PATCH",keepalive:true,
+    headers:{"Content-Type":"application/json","apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Prefer":"return=minimal"},
+    body:JSON.stringify(body)
   });
-
-  socket.on("listener:talker_waiting", () => showScreen("listener-incoming"));
-  socket.on("talker:waiting", () => showScreen("talker-pending"));
-  socket.on("talker:queued", () => showScreen("talker-waiting"));
-
-  socket.on("session:start", ({ sessionId, listenerMode }) => {
-    currentSession = sessionId;
-    myRole = listenerMode ? "listener" : "talker";
-    document.getElementById("chat-role-label").textContent = listenerMode ? "Sebagai Pendengar" : "Cerita kamu aman di sini";
-    document.getElementById("chat-box").innerHTML = "";
-    document.getElementById("timer-label").style.color = "var(--gold2)";
-    showScreen("chat");
-    startTimer();
+}
+function sbDel(table,filter){
+  return fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`,{
+    method:"DELETE",keepalive:true,
+    headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY}
   });
+}
 
-  socket.on("chat:message", (msg) => {
-    appendMessage(msg.text, false, msg.ts);
-  });
-
-  socket.on("session:ended", ({ byModerator, listenerLeft, talkerLeft } = {}) => {
-    stopTimer();
-    stopVoice();
-    currentSession = null;
-    let msg = "Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏";
-    if (byModerator) msg = "Sesi diakhiri oleh moderator.";
-    else if (listenerLeft) msg = "Pendengar telah meninggalkan sesi.";
-    else if (talkerLeft) msg = "Pengguna telah meninggalkan sesi.";
-    document.getElementById("ended-msg").innerHTML = msg;
-
-    if (myRole === "listener") {
-      setTimeout(() => showScreen("listener-standby"), 800);
-    } else {
-      selectedMood = null;
-      document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected"));
-      document.getElementById("feedback-text").value = "";
-      document.getElementById("feedback-btn").disabled = false;
-      document.getElementById("feedback-btn").textContent = "Kirim Feedback →";
-      showScreen("ended");
+// ═══════════════════════════════════════
+// STALE CLEANUP
+// ═══════════════════════════════════════
+async function cleanupStale(){
+  const cutoff=new Date(Date.now()-STALE_MS).toISOString();
+  const {data:stale}=await sb.from("listeners").select("id").lt("last_seen",cutoff).neq("status","busy");
+  if(stale?.length){
+    const ids=stale.map(l=>l.id);
+    for(const id of ids){
+      const {data:sess}=await sb.from("sessions").select("id").eq("listener_id",id).eq("status","active").limit(1);
+      if(sess?.length) await sb.from("sessions").update({status:"ended"}).eq("id",sess[0].id);
     }
-  });
-
-  socket.on("session:no_listener", () => showScreen("talker-waiting"));
-  socket.on("mod:joined", () => showScreen("mod-dashboard"));
-
-  socket.on("mod:update", (state) => {
-    document.getElementById("mod-listener-count").textContent = state.listeners.length;
-    document.getElementById("mod-session-count").textContent = state.sessions.length;
-    document.getElementById("mod-queue-count").textContent = state.queue;
-    document.getElementById("mod-talker-count").textContent = state.talkers.length;
-    const container = document.getElementById("mod-sessions");
-    if (state.sessions.length === 0) {
-      container.innerHTML = '<div class="empty-state">Belum ada sesi aktif</div>';
-    } else {
-      container.innerHTML = state.sessions.map(s => `
-        <div class="session-item">
-          <div class="session-info">
-            <div class="si-title"><span class="dot dot-green"></span>${s.listenerAlias}</div>
-            <div class="si-sub">${s.messageCount} pesan · ${new Date(s.startTime).toLocaleTimeString('id-ID')}</div>
-          </div>
-          <button class="btn btn-danger" style="padding:6px 12px;font-size:.75rem" onclick="modEndSession('${s.sessionId}')">Akhiri</button>
-        </div>
-      `).join('');
-    }
-  });
-}
-
-// ─── ROLE ACTIONS ─────────────────────────────────────────
-function talkerJoin() {
-  myRole = "talker";
-  initSocket();
-  socket.emit("talker:join");
-}
-
-function cancelQueue() {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
+    await sb.from("listeners").delete().in("id",ids);
   }
-  showScreen("landing");
+  const qCutoff=new Date(Date.now()-30*60*1000).toISOString();
+  await sb.from("queue").delete().lt("created_at",qCutoff).eq("status","waiting");
 }
 
-function listenerJoin() {
-  const alias = document.getElementById("listener-alias").value.trim() || "Listener";
-  const secret = document.getElementById("listener-secret").value.trim();
-  if (!secret) { showToast("Masukkan kode listener dulu ya"); return; }
-  myRole = "listener";
-  initSocket();
-  socket.emit("listener:join", { secret, alias });
-}
-
-function listenerAccept() { socket.emit("listener:accept"); }
-function listenerReject() { socket.emit("listener:reject"); showScreen("listener-standby"); }
-
-function modJoin() {
-  const secret = document.getElementById("mod-secret").value.trim();
-  if (!secret) return;
-  myRole = "moderator";
-  initSocket();
-  socket.emit("mod:join", { secret });
-}
-
-function modEndSession(sessionId) {
-  if (confirm("Akhiri sesi ini?")) socket.emit("mod:end_session", { sessionId });
-}
-
-// ─── CHAT ─────────────────────────────────────────────────
-function sendMsg() {
-  const input = document.getElementById("chat-input");
-  const text = input.value.trim();
-  if (!text || !currentSession) return;
-  appendMessage(text, true, Date.now());
-  socket.emit("chat:message", { sessionId: currentSession, text });
-  input.value = "";
-  setTimeout(() => input.focus(), 50);
-}
-
-function appendMessage(text, isMine, ts) {
-  const box = document.getElementById("chat-box");
-  const div = document.createElement("div");
-  div.className = `bubble ${isMine ? "mine" : "theirs"}`;
-  const time = new Date(ts).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-  div.innerHTML = `${escHtml(text)}<div class="btime">${time}</div>`;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-}
-
-// ─── VOICE TO TEXT ────────────────────────────────────────
-let recognition = null;
-let isListening = false;
-
-function toggleVoice() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    showToast("Browser kamu tidak support voice. Coba Chrome ya.");
-    return;
-  }
-
-  if (isListening) {
-    stopVoice();
-    return;
-  }
-
-  recognition = new SpeechRecognition();
-  recognition.lang = "id-ID";
-  recognition.continuous = false;
-  recognition.interimResults = true;
-
-  const btn = document.getElementById("voice-btn");
-  const input = document.getElementById("chat-input");
-
-  recognition.onstart = () => {
-    isListening = true;
-    btn.classList.add("listening");
-    btn.textContent = "🔴";
-    showToast("🎤 Sedang mendengarkan...");
-  };
-
-  recognition.onresult = (e) => {
-    const transcript = Array.from(e.results)
-      .map(r => r[0].transcript)
-      .join("");
-    input.value = transcript;
-  };
-
-  recognition.onend = () => {
-    isListening = false;
-    btn.classList.remove("listening");
-    btn.textContent = "🎤";
-    if (input.value.trim()) sendMsg();
-  };
-
-  recognition.onerror = (e) => {
-    isListening = false;
-    btn.classList.remove("listening");
-    btn.textContent = "🎤";
-    if (e.error !== "no-speech") showToast("❌ Voice error: " + e.error);
-  };
-
-  recognition.start();
-}
-
-function stopVoice() {
-  if (recognition) {
-    recognition.stop();
-    recognition = null;
-  }
-  isListening = false;
-  const btn = document.getElementById("voice-btn");
-  if (btn) { btn.classList.remove("listening"); btn.textContent = "🎤"; }
-}
-
-// ─── TIMER ────────────────────────────────────────────────
-const SESSION_DURATION = 90 * 60;
-let timerInterval = null;
-let timerSeconds = SESSION_DURATION;
-
-function startTimer() {
-  timerSeconds = SESSION_DURATION;
-  updateTimerDisplay();
-  clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timerSeconds--;
-    updateTimerDisplay();
-    if (timerSeconds === 10 * 60) { showToast("⏱ 10 menit lagi sesi berakhir"); document.getElementById("timer-label").style.color = "var(--gold)"; }
-    if (timerSeconds === 5 * 60) { showToast("⚠️ 5 menit lagi sesi berakhir"); document.getElementById("timer-label").style.color = "#e07a30"; }
-    if (timerSeconds <= 0) {
-      clearInterval(timerInterval);
-      showToast("⏰ Waktu sesi habis");
-      setTimeout(() => { if (currentSession) socket.emit("session:end", { sessionId: currentSession }); }, 1500);
-    }
-  }, 1000);
-}
-
-function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
-
-function updateTimerDisplay() {
-  const h = Math.floor(timerSeconds / 3600);
-  const m = Math.floor((timerSeconds % 3600) / 60);
-  const s = timerSeconds % 60;
-  const label = h > 0 ? `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}` : `${m}:${String(s).padStart(2,"0")}`;
-  document.getElementById("timer-label").textContent = label;
-  const pct = (timerSeconds / SESSION_DURATION) * 100;
-  const bar = document.getElementById("timer-bar");
-  bar.style.width = pct + "%";
-  bar.style.background = pct > 30 ? "var(--gold)" : pct > 10 ? "#e07a30" : "var(--red)";
-}
-
-function endSession() {
-  if (!confirm("Yakin mau mengakhiri sesi?")) return;
-  stopTimer();
-  stopVoice();
-  socket.emit("session:end", { sessionId: currentSession });
-}
-
-// ─── FEEDBACK ─────────────────────────────────────────────
-const FORMSPREE_FEEDBACK = "https://formspree.io/f/xvzvjzpb";
-let selectedMood = null;
-
-function pilihMood(btn) {
-  document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected"));
-  btn.classList.add("selected");
-  selectedMood = btn.dataset.mood;
-}
-
-async function kirimFeedback() {
-  const text = document.getElementById("feedback-text").value.trim();
-  if (!selectedMood && !text) { resetApp(); return; }
-  const btn = document.getElementById("feedback-btn");
-  btn.disabled = true;
-  btn.textContent = "Mengirim...";
-  try {
-    await fetch(FORMSPREE_FEEDBACK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({ perasaan: selectedMood || "(tidak dipilih)", pesan: text || "(tidak diisi)", _subject: "[Teman Curhat] Feedback Sesi" }),
-    });
-  } catch(e) {}
-  document.getElementById("feedback-section").style.display = "none";
-  document.getElementById("feedback-done").style.display = "block";
-}
-
-// ─── TINGGALKAN PESAN ─────────────────────────────────────
+// ═══════════════════════════════════════
+// TINGGALKAN PESAN
+// ═══════════════════════════════════════
 function switchLeaveTab(tab){
-  const isMsg = tab === "message";
-  document.getElementById("leave-message-panel").style.display = isMsg ? "block" : "none";
-  document.getElementById("leave-schedule-panel").style.display = isMsg ? "none" : "block";
-  document.getElementById("tab-msg-btn").classList.toggle("active", isMsg);
-  document.getElementById("tab-sched-btn").classList.toggle("active", !isMsg);
+  const isMsg=tab==="message";
+  document.getElementById("leave-message-panel").style.display=isMsg?"block":"none";
+  document.getElementById("leave-schedule-panel").style.display=isMsg?"none":"block";
+  document.getElementById("tab-msg-btn").classList.toggle("active",isMsg);
+  document.getElementById("tab-sched-btn").classList.toggle("active",!isMsg);
 }
 
 async function kirimLeaveMsgFn(){
-  const text = document.getElementById("leave-msg-text").value.trim();
+  const text=document.getElementById("leave-msg-text").value.trim();
   if(!text){showToast("Tulis pesan dulu ya 🙏");return;}
-  const btn = document.querySelector("#leave-message-panel .btn-primary");
-  btn.disabled = true; btn.textContent = "Mengirim...";
+  const btn=document.querySelector("#leave-message-panel .btn-primary");
+  btn.disabled=true;btn.textContent="Mengirim...";
   try{
     await fetch("https://api.web3forms.com/submit",{
       method:"POST",
@@ -780,152 +593,421 @@ async function kirimLeaveMsgFn(){
       body:JSON.stringify({access_key:WEB3FORMS_KEY,subject:"[Teman Curhat] Pesan dari Talker",pesan:text})
     });
   }catch(e){}
-  document.getElementById("leave-msg-text").style.display = "none";
-  btn.style.display = "none";
-  document.getElementById("leave-msg-done").style.display = "block";
+  document.getElementById("leave-msg-text").style.display="none";
+  btn.style.display="none";
+  document.getElementById("leave-msg-done").style.display="block";
 }
 
-// ─── NAVIGATION ───────────────────────────────────────────
-function showScreen(name) {
-  document.querySelectorAll(".screen, .landing").forEach(el => {
-    el.classList.remove("active");
-    el.style.display = "none";
-  });
-  const el = document.getElementById("screen-" + name);
-  if (el) {
-    el.style.display = "block";
-    el.classList.add("active");
-    if (name === "wall") loadWall();
-    if (name === "ended") {
-      const fs = document.getElementById("feedback-section");
-      const fd = document.getElementById("feedback-done");
-      if (fs) fs.style.display = "block";
-      if (fd) fd.style.display = "none";
-    }
-  }
-}
+// ═══════════════════════════════════════
+// DINDING CURHAT
+// ═══════════════════════════════════════
+const likedPosts=new Set(JSON.parse(localStorage.getItem("tc_liked")||"[]"));
 
-function resetApp() {
-  if (socket) { socket.disconnect(); socket = null; }
-  myRole = null; currentSession = null;
-  stopVoice();
-  document.getElementById("listener-secret").value = "";
-  document.getElementById("mod-secret").value = "";
-  showScreen("landing");
-}
-
-// ─── SUPABASE & WALL LOGIC ────────────────────────────────
-const SUPABASE_URL     = "https://acetdjwzrydmoonzpevz.supabase.co";
-const SUPABASE_ANON_KEY= "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjZXRkand6cnlkbW9vbnpwZXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTE2NDYsImV4cCI6MjA5MjgyNzY0Nn0.xOqG_ciBo2LpZGcZ5woZQrXybPdQ9eb3hMn3cwYt2wU";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const likedPosts = new Set(JSON.parse(localStorage.getItem("tc_liked") || "[]"));
-
-function goAppointment() {
-  window.open("appointment.html", "_blank");
-}
-
-async function loadWall() {
-  const feed = document.getElementById("wall-feed");
-  feed.innerHTML = `<div class="empty-state" id="t-wall-loading">${T[currentLang]["wall-loading"] || "Memuat cerita..."}</div>`;
-  
-  const { data, error } = await sb.from("confessions").select("*").order("created_at", { ascending: false }).limit(30);
-  if (error || !data?.length) {
-    feed.innerHTML = `<div class="empty-state">${currentLang === "id" ? "Belum ada cerita. Jadilah yang pertama berbagi!" : "No stories yet. Be the first to share!"}</div>`;
+async function loadWall(){
+  const feed=document.getElementById("wall-feed");
+  feed.innerHTML=`<div class="empty-state" id="t-wall-loading">${T[currentLang]["wall-loading"]}</div>`;
+  const {data,error}=await sb.from("wall_posts").select("*").order("created_at",{ascending:false}).limit(30);
+  if(error||!data?.length){
+    feed.innerHTML=`<div class="empty-state">${currentLang==="id"?"Belum ada cerita. Jadilah yang pertama berbagi!":"No stories yet. Be the first to share!"}</div>`;
     return;
   }
-  
-  feed.innerHTML = data.map(p => {
-    const liked = likedPosts.has(p.id);
-    const ago = timeAgo(p.created_at);
+  feed.innerHTML=data.map(p=>{
+    const liked=likedPosts.has(p.id);
+    const ago=timeAgo(p.created_at);
     return `<div class="wall-post">
       <div class="wall-post-text">${escHtml(p.content)}</div>
       <div class="wall-post-meta">
-        <span>👤 ${escHtml(p.alias || "Anonim")} · ${ago}</span>
-        <span class="wall-heart ${liked ? "liked" : ""}" onclick="toggleHeart('${p.id}', this, ${p.likes || 0})">
-          ${liked ? "❤️" : "🤍"} <span class="heart-count">${p.likes || 0}</span>
+        <span>${ago}</span>
+        <span class="wall-heart ${liked?"liked":""}" onclick="toggleHeart('${p.id}',this,${p.likes||0})">
+          ${liked?"❤️":"🤍"} <span class="heart-count">${p.likes||0}</span>
         </span>
       </div>
     </div>`;
   }).join("");
 }
 
-async function postToWall() {
-  const txt = document.getElementById("wall-input").value.trim();
-  if (!txt) { showToast("Tulis sesuatu dulu ya 🙏"); return; }
-  if (txt.length < 5) { showToast("Terlalu pendek 🙏"); return; }
-  const btn = document.getElementById("t-wall-post-btn");
-  btn.disabled = true;
-  
-  const { error } = await sb.from("confessions").insert({
-    alias: "Anonim",
-    content: txt,
-    category: "Lainnya",
-    likes: 0
-  });
-  
-  document.getElementById("wall-input").value = "";
-  btn.disabled = false;
-  if (error) { showToast("❌ Gagal posting: " + error.message); return; }
-  showToast(currentLang === "id" ? "Ceritamu sudah dibagikan 🌿" : "Your story has been shared 🌿");
+async function postToWall(){
+  const txt=document.getElementById("wall-input").value.trim();
+  if(!txt){showToast("Tulis sesuatu dulu ya 🙏");return;}
+  if(txt.length<5){showToast("Terlalu pendek 🙏");return;}
+  const btn=document.getElementById("t-wall-post-btn");
+  btn.disabled=true;
+  const {error}=await sb.from("wall_posts").insert({content:txt,likes:0});
+  document.getElementById("wall-input").value="";
+  btn.disabled=false;
+  if(error){showToast("❌ Gagal posting");return;}
+  showToast(currentLang==="id"?"Ceritamu sudah dibagikan 🌿":"Your story has been shared 🌿");
   await loadWall();
 }
 
-async function toggleHeart(id, el, currentLikes) {
-  if (likedPosts.has(id)) {
+async function toggleHeart(id,el,currentLikes){
+  if(likedPosts.has(id)){
     likedPosts.delete(id);
     el.classList.remove("liked");
-    el.innerHTML = `🤍 <span class="heart-count">${Math.max(0, currentLikes - 1)}</span>`;
-    try {
-      await sb.from("confessions").update({ likes: Math.max(0, currentLikes - 1) }).eq("id", id);
-    } catch(e) {}
+    el.innerHTML=`🤍 <span class="heart-count">${Math.max(0,currentLikes-1)}</span>`;
+    await sb.from("wall_posts").update({likes:Math.max(0,currentLikes-1)}).eq("id",id);
   } else {
     likedPosts.add(id);
     el.classList.add("liked");
-    el.innerHTML = `❤️ <span class="heart-count">${currentLikes + 1}</span>`;
-    try {
-      await sb.from("confessions").update({ likes: currentLikes + 1 }).eq("id", id);
-    } catch(e) {}
+    el.innerHTML=`❤️ <span class="heart-count">${currentLikes+1}</span>`;
+    await sb.from("wall_posts").update({likes:currentLikes+1}).eq("id",id);
   }
-  localStorage.setItem("tc_liked", JSON.stringify([...likedPosts]));
+  localStorage.setItem("tc_liked",JSON.stringify([...likedPosts]));
 }
 
-function timeAgo(ts) {
-  const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
-  if (diff < 60) return currentLang === "id" ? "Baru saja" : "Just now";
-  if (diff < 3600) return currentLang === "id" ? `${Math.floor(diff / 60)} menit lalu` : `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return currentLang === "id" ? `${Math.floor(diff / 3600)} jam lalu` : `${Math.floor(diff / 3600)}h ago`;
-  return currentLang === "id" ? `${Math.floor(diff / 86400)} hari lalu` : `${Math.floor(diff / 86400)}d ago`;
+function timeAgo(ts){
+  const diff=Math.floor((Date.now()-new Date(ts))/1000);
+  if(diff<60) return currentLang==="id"?"Baru saja":"Just now";
+  if(diff<3600) return currentLang==="id"?`${Math.floor(diff/60)} menit lalu`:`${Math.floor(diff/60)}m ago`;
+  if(diff<86400) return currentLang==="id"?`${Math.floor(diff/3600)} jam lalu`:`${Math.floor(diff/3600)}h ago`;
+  return currentLang==="id"?`${Math.floor(diff/86400)} hari lalu`:`${Math.floor(diff/86400)}d ago`;
 }
 
-// ─── UTILS ────────────────────────────────────────────────
-function escHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ═══════════════════════════════════════
+// TALKER FLOW
+// ═══════════════════════════════════════
+async function talkerJoin(){
+  myRole="talker"; myId=genId();
+  await cleanupStale();
+  const {error}=await sb.from("queue").insert({talker_id:myId,status:"waiting"});
+  if(error){showToast("❌ Gagal bergabung: "+error.message);return;}
+  showScreen("talker-waiting");
+  document.getElementById("leave-msg-done").style.display="none";
+  document.getElementById("leave-msg-text").style.display="block";
+  document.querySelector("#leave-message-panel .btn-primary").style.display="flex";
+  document.querySelector("#leave-message-panel .btn-primary").disabled=false;
+  document.querySelector("#leave-message-panel .btn-primary").textContent=T[currentLang]["lm-send"];
+  let tick=0;
+  stopAllPolls();
+  pollInterval=setInterval(async()=>{
+    tick++;
+    if(tick%5===0) await cleanupStale();
+    const {data:sess}=await sb.from("sessions").select("*").eq("talker_id",myId).eq("status","active").limit(1);
+    if(sess?.length){
+      stopAllPolls();
+      await sb.from("queue").delete().eq("talker_id",myId);
+      startChatSession(sess[0].id,false);
+    }
+  },POLL_MS);
 }
 
-let toastTimer = null;
-function showToast(msg) {
-  const existing = document.querySelector(".toast");
-  if (existing) existing.remove();
-  const el = document.createElement("div");
-  el.className = "toast";
-  el.textContent = msg;
-  document.body.appendChild(el);
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.remove(), 3000);
+async function cancelQueue(){
+  stopAllPolls();
+  await sb.from("queue").delete().eq("talker_id",myId);
+  myId=null;myRole=null;showScreen("landing");
 }
 
-document.addEventListener("visibilitychange", () => {
-  document.body.style.filter = document.hidden ? "blur(20px)" : "";
-});
-document.addEventListener("contextmenu", e => e.preventDefault());
-document.addEventListener("keydown", (e) => {
-  if (e.key === "PrintScreen" || (e.metaKey && e.shiftKey && ["3","4","5"].includes(e.key)) || (e.ctrlKey && e.key === "p")) {
-    e.preventDefault();
-    showToast("📵 Screenshot tidak diperbolehkan demi privasi pengguna");
+// ═══════════════════════════════════════
+// LISTENER FLOW
+// ═══════════════════════════════════════
+async function listenerJoin(){
+  const alias=document.getElementById("listener-alias").value.trim();
+  const secret=document.getElementById("listener-secret").value.trim();
+  if(!alias){showToast("Masukkan nama panggilanmu");return;}
+  if(secret!==LISTENER_SECRET){showToast("❌ Kode rahasia salah");return;}
+  myRole="listener";myId=genId();myListenerId=myId;
+  const {error}=await sb.from("listeners").insert({id:myId,alias,busy:false,status:"online",last_seen:new Date().toISOString()});
+  if(error){showToast("❌ Gagal masuk: "+error.message);myRole=null;myId=null;myListenerId=null;return;}
+  document.getElementById("listener-name-label").textContent=alias;
+  showScreen("listener-standby");
+  startListenerPoll();
+}
+
+function startListenerPoll(){
+  stopAllPolls();
+  let tick=0;
+  pollInterval=setInterval(async()=>{
+    if(!myListenerId) return;
+    tick++;
+    await sb.from("listeners").update({last_seen:new Date().toISOString(),status:currentSessionId?"busy":"online"}).eq("id",myListenerId);
+    if(tick%5===0) await cleanupStale();
+    if(currentSessionId){
+      await pollMessages();
+      const {data:sess}=await sb.from("sessions").select("status").eq("id",currentSessionId).maybeSingle();
+      if(sess?.status==="ended") handleSessionEnded({byOther:true});
+      return;
+    }
+    const {data:queue}=await sb.from("queue").select("*").eq("status","waiting").order("created_at").limit(1);
+    const incomingActive=document.getElementById("screen-listener-incoming").classList.contains("active");
+    if(queue?.length){
+      window._pendingTalkerId=queue[0].talker_id;
+      window._pendingQueueId=queue[0].id;
+      if(!incomingActive) showScreen("listener-incoming");
+    } else {
+      if(incomingActive) showScreen("listener-standby");
+    }
+  },POLL_MS);
+}
+
+async function listenerAccept(){
+  const talkerId=window._pendingTalkerId,queueId=window._pendingQueueId;
+  if(!talkerId){showScreen("listener-standby");return;}
+  const {data:locked,error:lockErr}=await sb.from("queue").update({status:"matched"}).eq("id",queueId).eq("status","waiting").select();
+  if(lockErr||!locked?.length){showToast("Talker sudah diambil listener lain");window._pendingTalkerId=null;showScreen("listener-standby");return;}
+  const sessionId=genId();
+  const {error:sessErr}=await sb.from("sessions").insert({id:sessionId,talker_id:talkerId,listener_id:myListenerId,status:"active",start_time:new Date().toISOString()});
+  if(sessErr){showToast("❌ Gagal buat sesi");await sb.from("queue").update({status:"waiting"}).eq("id",queueId);return;}
+  await sb.from("listeners").update({busy:true,status:"busy"}).eq("id",myListenerId);
+  await sb.from("queue").delete().eq("id",queueId);
+  window._pendingTalkerId=null;window._pendingQueueId=null;
+  startChatSession(sessionId,true);
+}
+
+async function listenerReject(){window._pendingTalkerId=null;window._pendingQueueId=null;showScreen("listener-standby");}
+
+async function listenerLogout(){
+  stopAllPolls();
+  if(myListenerId){await sb.from("listeners").update({status:"offline",busy:false}).eq("id",myListenerId);await sb.from("listeners").delete().eq("id",myListenerId);}
+  myListenerId=null;myRole=null;myId=null;showScreen("landing");
+}
+
+// ═══════════════════════════════════════
+// CHAT SESSION
+// ═══════════════════════════════════════
+async function startChatSession(sessionId,isListener){
+  currentSessionId=sessionId;myRole=isListener?"listener":"talker";
+  sessionAudioFiles=[];lastMsgTs=0;
+  document.getElementById("chat-role-label").textContent=isListener?(currentLang==="id"?"Sebagai Pendengar":"As Listener"):(currentLang==="id"?"Cerita kamu aman":"You're safe here");
+  document.getElementById("chat-box").innerHTML="";
+  showScreen("chat");startTimer();
+  const {data:msgs}=await sb.from("messages").select("*").eq("session_id",sessionId).order("ts");
+  if(msgs?.length){msgs.forEach(m=>{const mine=(isListener&&m.role==="listener")||(!isListener&&m.role==="talker");m.audio_url?appendVoiceBubble(m.audio_url,0,mine,m.ts):appendTextBubble(m.text,mine,m.ts);if(m.ts>lastMsgTs)lastMsgTs=m.ts;});}
+  if(!isListener){
+    stopAllPolls();
+    pollInterval=setInterval(async()=>{
+      if(!currentSessionId) return;
+      await pollMessages();
+      const {data:sess}=await sb.from("sessions").select("status").eq("id",currentSessionId).maybeSingle();
+      if(sess?.status==="ended") handleSessionEnded({byOther:true});
+    },POLL_MS);
   }
+}
+
+async function pollMessages(){
+  if(!currentSessionId) return;
+  const {data:newMsgs}=await sb.from("messages").select("*").eq("session_id",currentSessionId).gt("ts",lastMsgTs).order("ts");
+  if(!newMsgs?.length) return;
+  newMsgs.forEach(m=>{
+    const mine=(myRole==="listener"&&m.role==="listener")||(myRole==="talker"&&m.role==="talker");
+    if(!mine) m.audio_url?appendVoiceBubble(m.audio_url,0,false,m.ts):appendTextBubble(m.text,false,m.ts);
+    if(m.ts>lastMsgTs) lastMsgTs=m.ts;
+  });
+}
+
+async function sendMsg(){
+  const inp=document.getElementById("chat-input");
+  const text=inp.value.trim();
+  if(!text||!currentSessionId) return;
+  inp.value="";
+  const ts=Date.now();lastMsgTs=ts;
+  appendTextBubble(text,true,ts);
+  await sb.from("messages").insert({session_id:currentSessionId,role:myRole,text,ts});
+}
+
+function appendTextBubble(text,mine,ts){
+  const box=document.getElementById("chat-box");
+  const d=document.createElement("div");d.className="bubble "+(mine?"mine":"theirs");
+  d.innerHTML=`${escHtml(text)}<div class="btime">${fmtTime(ts)}</div>`;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+
+// ── VOICE NOTE RECORD
+async function toggleRecording(){isRecording?stopRecording():startRecording();}
+async function startRecording(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const mime=MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":"audio/ogg";
+    mediaRecorder=new MediaRecorder(stream,{mimeType:mime});audioChunks=[];
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
+    mediaRecorder.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());await uploadAndSendVoice(new Blob(audioChunks,{type:mime}),recSeconds);};
+    mediaRecorder.start(100);isRecording=true;recSeconds=0;
+    document.getElementById("rec-btn").classList.add("recording");
+    document.getElementById("rec-btn").textContent="⏹️";
+    document.getElementById("rec-bar").classList.add("active");
+    recTimerInterval=setInterval(()=>{recSeconds++;document.getElementById("rec-time").textContent=fmtDur(recSeconds);if(recSeconds>=120)stopRecording();},1000);
+  }catch(e){showToast("❌ Tidak bisa akses mikrofon");}
+}
+function stopRecording(){
+  if(!mediaRecorder) return;
+  clearInterval(recTimerInterval);mediaRecorder.stop();isRecording=false;
+  document.getElementById("rec-btn").classList.remove("recording");
+  document.getElementById("rec-btn").textContent="🎙️";
+  document.getElementById("rec-bar").classList.remove("active");
+  document.getElementById("rec-time").textContent="0:00";
+}
+function cancelRecording(){
+  if(!mediaRecorder) return;
+  clearInterval(recTimerInterval);mediaRecorder.ondataavailable=null;mediaRecorder.onstop=null;
+  try{mediaRecorder.stop();}catch(e){}
+  mediaRecorder=null;isRecording=false;audioChunks=[];
+  document.getElementById("rec-btn").classList.remove("recording");
+  document.getElementById("rec-btn").textContent="🎙️";
+  document.getElementById("rec-bar").classList.remove("active");
+  document.getElementById("rec-time").textContent="0:00";
+}
+async function uploadAndSendVoice(blob,duration){
+  if(!currentSessionId) return;
+  showToast("⏳ Mengirim voice note...",6000);
+  const ext=blob.type.includes("webm")?"webm":"ogg";
+  const path=`${currentSessionId}/${genId()}.${ext}`;
+  const {error}=await sb.storage.from("voice-notes").upload(path,blob,{contentType:blob.type});
+  if(error){showToast("❌ Gagal kirim voice note");return;}
+  const {data:urlData}=sb.storage.from("voice-notes").getPublicUrl(path);
+  const audioUrl=urlData.publicUrl;
+  sessionAudioFiles.push(path);
+  const ts=Date.now();lastMsgTs=ts;
+  appendVoiceBubble(audioUrl,duration,true,ts);
+  await sb.from("messages").insert({session_id:currentSessionId,role:myRole,text:"[Voice Note]",audio_url:audioUrl,ts});
+  showToast("✅ Voice note terkirim");
+}
+
+// ── VOICE NOTE PLAY
+function appendVoiceBubble(audioUrl,duration,mine,ts){
+  const box=document.getElementById("chat-box");
+  const id="vn"+genId().replace(/-/g,"");
+  const bars=Array.from({length:22},()=>`<div class="vb-bar" style="height:${Math.floor(Math.random()*18+6)}px"></div>`).join("");
+  const d=document.createElement("div");d.className="bubble "+(mine?"mine":"theirs");
+  d.innerHTML=`<div class="voice-bubble"><button class="vb-play" id="play_${id}" onclick="togglePlay('${id}','${audioUrl.replace(/'/g,"\\'")}')">▶</button><div class="vb-bars" id="bars_${id}">${bars}</div><span class="vb-dur" id="dur_${id}">${fmtDur(duration)}</span></div><div class="btime">${fmtTime(ts)}</div>`;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function togglePlay(id,url){
+  if(currentAudio&&currentAudioId===id){currentAudio.paused?currentAudio.play():currentAudio.pause();document.getElementById("play_"+id).textContent=currentAudio.paused?"▶":"⏸";return;}
+  if(currentAudio){currentAudio.pause();if(currentAudioId){const pb=document.getElementById("play_"+currentAudioId);if(pb)pb.textContent="▶";resetBars(currentAudioId);}clearInterval(audioProgressInterval);}
+  currentAudio=new Audio(url);currentAudioId=id;
+  document.getElementById("play_"+id).textContent="⏸";
+  currentAudio.play();
+  audioProgressInterval=setInterval(()=>{
+    if(!currentAudio||currentAudio.paused) return;
+    const pct=currentAudio.currentTime/(currentAudio.duration||1);
+    const allBars=document.querySelectorAll(`#bars_${id} .vb-bar`);
+    const n=Math.floor(pct*allBars.length);
+    allBars.forEach((b,i)=>i<n?b.classList.add("played"):b.classList.remove("played"));
+    const durEl=document.getElementById("dur_"+id);
+    if(durEl) durEl.textContent=fmtDur((currentAudio.duration||0)-currentAudio.currentTime);
+  },100);
+  currentAudio.onended=()=>{clearInterval(audioProgressInterval);const pb=document.getElementById("play_"+id);if(pb)pb.textContent="▶";resetBars(id);currentAudio=null;currentAudioId=null;};
+}
+function resetBars(id){document.querySelectorAll(`#bars_${id} .vb-bar`).forEach(b=>b.classList.remove("played"));}
+
+// ═══════════════════════════════════════
+// SESSION END
+// ═══════════════════════════════════════
+async function endSession(){
+  if(!currentSessionId) return;
+  await sb.from("sessions").update({status:"ended"}).eq("id",currentSessionId);
+  handleSessionEnded({self:true});
+}
+async function handleSessionEnded(payload={}){
+  stopTimer();cancelRecording();
+  if(currentAudio){currentAudio.pause();clearInterval(audioProgressInterval);currentAudio=null;}
+  const sessionId=currentSessionId;currentSessionId=null;
+  if(sessionId){
+    await sb.from("sessions").update({status:"ended"}).eq("id",sessionId);
+    if(myRole==="listener"&&myListenerId) await sb.from("listeners").update({busy:false,status:"online"}).eq("id",myListenerId);
+    if(sessionAudioFiles.length){await sb.storage.from("voice-notes").remove(sessionAudioFiles);sessionAudioFiles=[];}
+  }
+  if(myRole==="listener"){
+    showToast("Sesi selesai");
+    setTimeout(()=>{showScreen("listener-standby");stopAllPolls();startListenerPoll();},800);
+  } else {
+    stopAllPolls();
+    let msg=currentLang==="id"?"Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏":"Thank you for sharing.<br>You are not alone. 🙏";
+    if(payload.byOther) msg=currentLang==="id"?"Sesi telah diakhiri.":"The session has ended.";
+    document.getElementById("ended-msg").innerHTML=msg;
+    selectedMood=null;
+    document.querySelectorAll(".mood-btn").forEach(b=>b.classList.remove("selected"));
+    document.getElementById("feedback-text").value="";
+    document.getElementById("feedback-btn").disabled=false;
+    document.getElementById("feedback-btn").textContent=currentLang==="id"?"Kirim Feedback →":"Send Feedback →";
+    document.getElementById("feedback-done").style.display="none";
+    document.getElementById("feedback-section").style.display="block";
+    showScreen("ended");
+  }
+}
+
+// ═══════════════════════════════════════
+// MODERATOR
+// ═══════════════════════════════════════
+async function modJoin(){
+  if(document.getElementById("mod-secret").value.trim()!==MODERATOR_SECRET){showToast("❌ Password salah");return;}
+  myRole="mod";showScreen("mod-dashboard");await modRefresh();
+}
+async function modRefresh(){
+  const [{data:listeners},{data:sessions},{data:queue}]=await Promise.all([
+    sb.from("listeners").select("*"),
+    sb.from("sessions").select("*").eq("status","active"),
+    sb.from("queue").select("*").eq("status","waiting")
+  ]);
+  document.getElementById("mod-listener-count").textContent=listeners?.filter(l=>!l.busy).length||0;
+  document.getElementById("mod-session-count").textContent=sessions?.length||0;
+  document.getElementById("mod-queue-count").textContent=queue?.length||0;
+  document.getElementById("mod-talker-count").textContent=queue?.length||0;
+  const c=document.getElementById("mod-sessions");
+  if(!sessions?.length){c.innerHTML=`<div class="empty-state">${T[currentLang]["md-empty"]}</div>`;return;}
+  c.innerHTML=sessions.map(s=>{
+    const l=listeners?.find(x=>x.id===s.listener_id);
+    const dur=Math.floor((Date.now()-new Date(s.start_time||s.started_at))/60000);
+    return `<div class="session-item"><div class="session-info"><div class="si-title"><span class="dot dot-green"></span>${l?.alias||"Listener"}</div><div class="si-sub">Durasi: ${dur} menit</div></div><button class="btn btn-danger" style="padding:6px 12px;font-size:.75rem" onclick="modEndSession('${s.id}','${s.listener_id}')">Akhiri</button></div>`;
+  }).join("");
+}
+async function modEndSession(sessionId,listenerId){
+  await sb.from("sessions").update({status:"ended"}).eq("id",sessionId);
+  await sb.from("listeners").update({busy:false,status:"online"}).eq("id",listenerId);
+  showToast("Sesi diakhiri");await modRefresh();
+}
+
+// ═══════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════
+function startTimer(){timerSeconds=SESSION_DURATION;updateTimerUI();timerInterval=setInterval(()=>{if(--timerSeconds<=0){stopTimer();endSession();return;}updateTimerUI();},1000);}
+function stopTimer(){if(timerInterval){clearInterval(timerInterval);timerInterval=null;}}
+function updateTimerUI(){
+  const h=Math.floor(timerSeconds/3600),m=Math.floor((timerSeconds%3600)/60),s=timerSeconds%60;
+  document.getElementById("timer-label").textContent=`${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  const pct=(timerSeconds/SESSION_DURATION)*100;
+  document.getElementById("timer-bar").style.width=pct+"%";
+  if(pct<20) document.getElementById("timer-label").style.color="var(--red)";
+}
+
+// ═══════════════════════════════════════
+// FEEDBACK & RESET
+// ═══════════════════════════════════════
+function pilihMood(btn){document.querySelectorAll(".mood-btn").forEach(b=>b.classList.remove("selected"));btn.classList.add("selected");selectedMood=btn.dataset.mood;}
+async function kirimFeedback(){
+  document.getElementById("feedback-btn").disabled=true;
+  document.getElementById("feedback-btn").textContent=currentLang==="id"?"Mengirim...":"Sending...";
+  document.getElementById("feedback-section").style.display="none";
+  document.getElementById("feedback-done").style.display="block";
+}
+function resetApp(){
+  stopTimer();cancelRecording();stopAllPolls();
+  if(currentAudio){currentAudio.pause();clearInterval(audioProgressInterval);currentAudio=null;}
+  currentSessionId=myRole=myId=myListenerId=null;
+  selectedMood=null;sessionAudioFiles=[];lastMsgTs=0;
+  document.getElementById("chat-box").innerHTML="";
+  document.getElementById("feedback-text").value="";
+  document.getElementById("feedback-done").style.display="none";
+  document.getElementById("feedback-section").style.display="block";
+  document.querySelectorAll(".mood-btn").forEach(b=>b.classList.remove("selected"));
+  showScreen("landing");
+}
+
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function escHtml(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+// ═══════════════════════════════════════
+// OFFLINE DETECTION
+// ═══════════════════════════════════════
+window.addEventListener("beforeunload",()=>{
+  if(currentSessionId) sbPatch("sessions",`id=eq.${currentSessionId}`,{status:"ended"});
+  if(myListenerId) sbDel("listeners",`id=eq.${myListenerId}`);
 });
 
+// ═══════════════════════════════════════
+// INIT — buat tabel wall_posts kalau belum ada
+// ═══════════════════════════════════════
 showScreen("landing");
 </script>
 </body>
