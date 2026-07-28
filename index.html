@@ -124,6 +124,19 @@
   .tab-row{display:flex;gap:6px;margin-bottom:16px;background:var(--surface2);border-radius:10px;padding:4px}
   .tab-btn{flex:1;background:transparent;border:none;padding:8px;border-radius:8px;font-size:.78rem;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
   .tab-btn.active{background:var(--surface);color:var(--gold2);border:1px solid var(--border)}
+  
+  /* Reply */
+  .wall-replies{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+  .reply-item{background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:.82rem;color:var(--cream);line-height:1.5}
+  .reply-meta{font-size:.68rem;color:var(--muted);margin-top:3px}
+  .reply-input-row{display:flex;gap:6px;margin-top:8px}
+  .reply-input-row input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;margin:0}
+  .reply-input-row input:focus{border-color:var(--gold)}
+  .reply-send-btn{background:var(--gold);border:none;border-radius:8px;padding:0 14px;cursor:pointer;font-size:.8rem;color:#0f0e0c;font-weight:500;white-space:nowrap;transition:all .2s}
+  .reply-send-btn:hover{background:var(--gold2)}
+  .wall-post-actions{display:flex;align-items:center;gap:12px;margin-top:8px}
+  .reply-toggle{font-size:.72rem;color:var(--muted);cursor:pointer;transition:color .2s}
+  .reply-toggle:hover{color:var(--gold2)}
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
@@ -187,8 +200,8 @@
       <h2 style="font-size:1rem;margin-bottom:6px" id="t-lm-h2">💌 Tidak ada pendengar?</h2>
       <p class="sub" style="margin-bottom:12px" id="t-lm-sub">Tinggalkan pesan dan kami akan menghubungi kamu, atau daftar sesi terjadwal.</p>
       <div class="tab-row">
-        <button class="tab-btn active" onclick="switchLeaveTab('message')" id="tab-msg-btn" id="t-lm-tab1">Tinggalkan Pesan</button>
-        <button class="tab-btn" onclick="switchLeaveTab('schedule')" id="tab-sched-btn" id="t-lm-tab2">Buat Jadwal</button>
+        <button class="tab-btn active" onclick="switchLeaveTab('message')" id="tab-msg-btn">Tinggalkan Pesan</button>
+        <button class="tab-btn" onclick="switchLeaveTab('schedule')" id="tab-sched-btn">Buat Jadwal</button>
       </div>
       <!-- Tab: Pesan -->
       <div id="leave-message-panel">
@@ -616,16 +629,37 @@ async function loadWall(){
     feed.innerHTML=`<div class="empty-state">${currentLang==="id"?"Belum ada cerita. Jadilah yang pertama berbagi!":"No stories yet. Be the first to share!"}</div>`;
     return;
   }
+  
+  // Load reply counts
+  const postIds = data.map(p=>p.id);
+  let replyCounts = {};
+  if(postIds.length){
+    const {data:rc} = await sb.from("wall_replies").select("post_id").in("post_id",postIds);
+    if(rc) rc.forEach(r=>{ replyCounts[r.post_id]=(replyCounts[r.post_id]||0)+1; });
+  }
+
   feed.innerHTML=data.map(p=>{
     const liked=likedPosts.has(p.id);
     const ago=timeAgo(p.created_at);
-    return `<div class="wall-post">
+    const rc=replyCounts[p.id]||0;
+    const replyLabel=currentLang==="id"?`Balas${rc>0?" ("+rc+")":""}`:(`Reply${rc>0?" ("+rc+")":""}`);
+    return `<div class="wall-post" id="post-${p.id}">
       <div class="wall-post-text">${escHtml(p.content)}</div>
-      <div class="wall-post-meta">
-        <span>${ago}</span>
-        <span class="wall-heart ${liked?"liked":""}" onclick="toggleHeart('${p.id}',this,${p.likes||0})">
-          ${liked?"❤️":"🤍"} <span class="heart-count">${p.likes||0}</span>
-        </span>
+      <div class="wall-post-actions">
+        <div class="wall-post-meta" style="flex:1">
+          <span>${ago}</span>
+          <span class="wall-heart ${liked?"liked":""}" onclick="toggleHeart('${p.id}',this,${p.likes||0})">
+            ${liked?"❤️":"🤍"} <span class="heart-count">${p.likes||0}</span>
+          </span>
+        </div>
+        <span class="reply-toggle" onclick="toggleReplies('${p.id}')">💬 ${replyLabel}</span>
+      </div>
+      <div class="wall-replies" id="replies-${p.id}" style="display:none">
+        <div id="replies-list-${p.id}"><div style="font-size:.78rem;color:var(--muted);padding:4px 0">Memuat...</div></div>
+        <div class="reply-input-row">
+          <input type="text" id="reply-input-${p.id}" placeholder="${currentLang==="id"?"Tulis balasan...":"Write a reply..."}" onkeydown="if(event.key==='Enter')sendReply('${p.id}')" maxlength="300"/>
+          <button class="reply-send-btn" onclick="sendReply('${p.id}')">${currentLang==="id"?"Kirim":"Send"}</button>
+        </div>
       </div>
     </div>`;
   }).join("");
@@ -1005,6 +1039,103 @@ function resetApp(){
 // UTILS
 // ═══════════════════════════════════════
 function escHtml(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+// ═══════════════════════════════════════
+// WALL REPLIES & EDITING
+// ═══════════════════════════════════════
+const openReplies=new Set();
+const myReplies=new Set(JSON.parse(localStorage.getItem("tc_my_replies")||"[]"));
+
+async function toggleReplies(postId){
+  const panel=document.getElementById("replies-"+postId);
+  if(!panel) return;
+  if(openReplies.has(postId)){
+    panel.style.display="none";
+    openReplies.delete(postId);
+  } else {
+    panel.style.display="block";
+    openReplies.add(postId);
+    await loadReplies(postId);
+  }
+}
+
+async function loadReplies(postId){
+  const list=document.getElementById("replies-list-"+postId);
+  if(!list) return;
+  const {data,error}=await sb.from("wall_replies").select("*").eq("post_id",postId).order("created_at");
+  if(error){list.innerHTML=`<div style="font-size:.78rem;color:var(--red)">❌ ${error.message}</div>`;return;}
+  if(!data?.length){
+    list.innerHTML=`<div style="font-size:.78rem;color:var(--muted);padding:4px 0">${currentLang==="id"?"Belum ada balasan. Jadilah yang pertama!":"No replies yet. Be the first!"}</div>`;
+    return;
+  }
+  list.innerHTML=data.map(r=> {
+    const isMine = myReplies.has(r.id);
+    const editBtn = isMine ? `<span class="reply-edit-btn" style="margin-left:8px;cursor:pointer;color:var(--gold)" onclick="startEditReply('${r.id}', '${postId}')">✍️ Edit</span>` : "";
+    return `
+      <div class="reply-item" id="reply-container-${r.id}">
+        <span id="reply-text-${r.id}">${escHtml(r.content)}</span>
+        <div class="reply-meta">
+          <span>${timeAgo(r.created_at)}</span>
+          ${editBtn}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function sendReply(postId){
+  const inp=document.getElementById("reply-input-"+postId);
+  if(!inp) return;
+  const text=inp.value.trim();
+  if(!text){showToast("Tulis balasan dulu ya 🙏");return;}
+  inp.disabled=true;
+  const {data,error}=await sb.from("wall_replies").insert({post_id:postId,content:text}).select();
+  inp.disabled=false;
+  if(error){showToast("❌ "+error.message,4000);return;}
+  if(data && data[0]){
+    myReplies.add(data[0].id);
+    localStorage.setItem("tc_my_replies",JSON.stringify([...myReplies]));
+  }
+  inp.value="";
+  showToast(currentLang==="id"?"Balasan terkirim 🌿":"Reply sent 🌿");
+  await loadReplies(postId);
+  // Update reply count di toggle button
+  const toggle=document.querySelector(`#post-${postId} .reply-toggle`);
+  if(toggle){
+    const {data:rc}=await sb.from("wall_replies").select("post_id").eq("post_id",postId);
+    const count=rc?.length||0;
+    toggle.textContent=currentLang==="id"?`💬 Balas (${count})`:`💬 Reply (${count})`;
+  }
+}
+
+function startEditReply(replyId, postId) {
+  const textSpan = document.getElementById("reply-text-"+replyId);
+  if (!textSpan) return;
+  const currentText = textSpan.textContent;
+  textSpan.innerHTML = `
+    <div class="reply-edit-row" style="display:flex;gap:6px;margin-top:4px;">
+      <input type="text" id="edit-input-${replyId}" value="${currentText}" style="flex:1;background:var(--surface);border:1px solid var(--gold);border-radius:4px;padding:4px 8px;color:var(--cream);font-size:.78rem;margin:0;" />
+      <button class="reply-send-btn" style="padding:2px 8px;font-size:.72rem;" onclick="saveEditReply('${replyId}', '${postId}')">Simpan</button>
+      <button class="reply-send-btn" style="padding:2px 8px;font-size:.72rem;background:var(--surface2);color:var(--muted);" onclick="loadReplies('${postId}')">Batal</button>
+    </div>
+  `;
+}
+
+async function saveEditReply(replyId, postId) {
+  const inp = document.getElementById("edit-input-"+replyId);
+  if (!inp) return;
+  const newText = inp.value.trim();
+  if (!newText) { showToast("Balasan tidak boleh kosong 🙏"); return; }
+  inp.disabled = true;
+  const { error } = await sb.from("wall_replies").update({ content: newText }).eq("id", replyId);
+  if (error) {
+    showToast("❌ Gagal mengedit: " + error.message);
+    inp.disabled = false;
+    return;
+  }
+  showToast("Balasan diperbarui 🌿");
+  await loadReplies(postId);
+}
 
 // ═══════════════════════════════════════
 // OFFLINE DETECTION
