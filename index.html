@@ -8,138 +8,214 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
-    --bg: #0f0e0c; --surface: #1a1814; --surface2: #242018;
-    --border: #2e2a22; --gold: #c9a84c; --gold2: #e8c97a;
-    --cream: #f0e8d8; --muted: #7a7060; --green: #4caf7a;
-    --red: #c96060; --radius: 12px;
+    --bg:#0f0e0c;--surface:#1a1814;--surface2:#242018;--border:#2e2a22;
+    --gold:#c9a84c;--gold2:#e8c97a;--cream:#f0e8d8;--muted:#7a7060;
+    --green:#4caf7a;--red:#c96060;--radius:12px;--blue:#4a90d9;
   }
-  @media print { body { display: none !important; } }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--cream); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 0%, #1e1a0e 0%, transparent 70%); pointer-events: none; z-index: 0; }
-  .wrap { position: relative; z-index: 1; width: 100%; max-width: 480px; }
-  .landing { text-align: center; animation: fadeUp .6s ease both; }
-  .logo { font-family: 'Lora', serif; font-size: 2.4rem; font-weight: 600; color: var(--gold2); letter-spacing: -0.5px; line-height: 1; }
-  .logo span { font-style: italic; font-weight: 400; color: var(--gold); }
-  .tagline { font-size: .85rem; color: var(--muted); margin-top: 8px; letter-spacing: .5px; }
-  .divider { width: 40px; height: 1px; background: var(--gold); margin: 28px auto; opacity: .5; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 12px; }
-  .role-btn { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; color: var(--cream); cursor: pointer; text-align: left; display: flex; align-items: center; gap: 16px; margin-bottom: 10px; transition: all .2s; }
-  .role-btn:hover { border-color: var(--gold); background: var(--surface2); }
-  .role-btn .icon { font-size: 1.6rem; }
-  .role-btn .rb-title { font-family: 'Lora', serif; font-size: 1rem; color: var(--gold2); }
-  .role-btn .rb-desc { font-size: .78rem; color: var(--muted); margin-top: 3px; }
-  .screen { display: none; animation: fadeUp .4s ease both; }
-  .screen.active { display: block; }
-  h2 { font-family: 'Lora', serif; font-size: 1.3rem; color: var(--gold2); margin-bottom: 6px; }
-  .sub { font-size: .82rem; color: var(--muted); margin-bottom: 20px; }
-  label { font-size: .8rem; color: var(--muted); display: block; margin-bottom: 6px; }
-  input[type=text], input[type=password] { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: .9rem; outline: none; transition: border-color .2s; margin-bottom: 16px; }
-  input:focus { border-color: var(--gold); }
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 500; transition: all .2s; }
-  .btn-primary { background: var(--gold); color: #0f0e0c; }
-  .btn-primary:hover { background: var(--gold2); }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  .btn-ghost:hover { border-color: var(--muted); color: var(--cream); }
-  .btn-danger { background: var(--red); color: #fff; }
-  .btn-full { width: 100%; }
-  .btn:disabled { opacity: .4; cursor: not-allowed; }
-  .back-link { font-size: .8rem; color: var(--muted); cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 6px; }
-  .back-link:hover { color: var(--cream); }
-  .status-box { border-radius: var(--radius); padding: 20px; text-align: center; border: 1px solid var(--border); background: var(--surface); margin-bottom: 16px; }
-  .status-icon { font-size: 2rem; margin-bottom: 8px; }
-  .status-title { font-family: 'Lora', serif; font-size: 1rem; color: var(--gold2); }
-  .status-desc { font-size: .8rem; color: var(--muted); margin-top: 6px; }
-  .pulse { animation: pulse 2s ease infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-  .chat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .chat-role { font-size: .75rem; color: var(--muted); }
-  .chat-role strong { color: var(--gold); }
-  .chat-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); height: 320px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; scroll-behavior: smooth; }
-  .bubble { max-width: 82%; padding: 10px 14px; border-radius: 16px; font-size: .88rem; line-height: 1.5; animation: fadeUp .2s ease both; }
-  .bubble.mine { background: var(--gold); color: #0f0e0c; align-self: flex-end; border-bottom-right-radius: 4px; }
-  .bubble.theirs { background: var(--surface2); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
-  .bubble .btime { font-size: .68rem; opacity: .5; margin-top: 4px; }
-  /* Voice bubble */
-  .voice-bubble { display: flex; align-items: center; gap: 10px; min-width: 190px; }
-  .vb-play { width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .85rem; flex-shrink: 0; transition: all .15s; }
-  .bubble.mine .vb-play { background: rgba(0,0,0,.18); color: #0f0e0c; }
-  .bubble.theirs .vb-play { background: var(--gold); color: #0f0e0c; }
-  .vb-bars { display: flex; align-items: center; gap: 2px; flex: 1; height: 28px; }
-  .vb-bar { width: 3px; border-radius: 99px; flex-shrink: 0; }
-  .bubble.mine .vb-bar { background: rgba(0,0,0,.25); }
-  .bubble.theirs .vb-bar { background: var(--muted); }
-  .bubble.mine .vb-bar.played { background: rgba(0,0,0,.55); }
-  .bubble.theirs .vb-bar.played { background: var(--gold); }
-  .vb-dur { font-size: .7rem; opacity: .6; white-space: nowrap; min-width: 30px; text-align: right; }
-  /* Chat input */
-  .chat-input-row { display: flex; gap: 8px; align-items: center; }
-  .chat-input-row input { flex: 1; margin-bottom: 0; }
-  .rec-btn { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 0 14px; cursor: pointer; font-size: 1.1rem; height: 44px; transition: all .2s; color: var(--muted); flex-shrink: 0; }
-  .rec-btn:hover { border-color: var(--gold); }
-  .rec-btn.recording { border-color: var(--red); color: var(--red); animation: pulse .8s ease infinite; }
-  .rec-bar { display: none; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--red); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
-  .rec-bar.active { display: flex; }
-  .rec-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--red); flex-shrink: 0; animation: pulse .8s ease infinite; }
-  .rec-label { font-size: .82rem; color: var(--red); flex: 1; }
-  .rec-time { font-size: .82rem; color: var(--muted); font-family: 'Lora', serif; }
-  .rec-cancel { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .8rem; padding: 4px 8px; }
-  .rec-cancel:hover { color: var(--cream); }
+  @media print{body{display:none!important}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--cream);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,#1e1a0e 0%,transparent 70%);pointer-events:none;z-index:0}
+  .wrap{position:relative;z-index:1;width:100%;max-width:480px}
+  .landing{text-align:center;animation:fadeUp .6s ease both}
+  .logo{font-family:'Lora',serif;font-size:2.4rem;font-weight:600;color:var(--gold2);letter-spacing:-.5px;line-height:1}
+  .logo span{font-style:italic;font-weight:400;color:var(--gold)}
+  .tagline{font-size:.85rem;color:var(--muted);margin-top:8px;letter-spacing:.5px}
+  .divider{width:40px;height:1px;background:var(--gold);margin:28px auto;opacity:.5}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:12px}
+  .role-btn{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;color:var(--cream);cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:all .2s}
+  .role-btn:hover{border-color:var(--gold);background:var(--surface2)}
+  .role-btn .icon{font-size:1.5rem;flex-shrink:0}
+  .role-btn .rb-title{font-family:'Lora',serif;font-size:.95rem;color:var(--gold2)}
+  .role-btn .rb-desc{font-size:.75rem;color:var(--muted);margin-top:2px}
+  .role-btn.secondary{border-color:var(--border);opacity:.85}
+  .role-btn.accent{border-color:#2a4a2a}
+  /* Lang toggle */
+  .lang-toggle{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
+  .lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.72rem;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+  .lang-btn.active{border-color:var(--gold);color:var(--gold2);background:#2a2210}
+  /* Screens */
+  .screen{display:none;animation:fadeUp .4s ease both}
+  .screen.active{display:block}
+  h2{font-family:'Lora',serif;font-size:1.3rem;color:var(--gold2);margin-bottom:6px}
+  .sub{font-size:.82rem;color:var(--muted);margin-bottom:20px}
+  label{font-size:.8rem;color:var(--muted);display:block;margin-bottom:6px}
+  input[type=text],input[type=password],textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;margin-bottom:14px}
+  textarea{resize:vertical;min-height:100px;margin-bottom:14px}
+  input:focus,textarea:focus{border-color:var(--gold)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;transition:all .2s}
+  .btn-primary{background:var(--gold);color:#0f0e0c}
+  .btn-primary:hover{background:var(--gold2)}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+  .btn-ghost:hover{border-color:var(--muted);color:var(--cream)}
+  .btn-blue{background:var(--blue);color:#fff}
+  .btn-blue:hover{background:#5aa0e8}
+  .btn-danger{background:var(--red);color:#fff}
+  .btn-full{width:100%}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .back-link{font-size:.8rem;color:var(--muted);cursor:pointer;margin-bottom:20px;display:inline-flex;align-items:center;gap:6px}
+  .back-link:hover{color:var(--cream)}
+  .status-box{border-radius:var(--radius);padding:20px;text-align:center;border:1px solid var(--border);background:var(--surface);margin-bottom:16px}
+  .status-icon{font-size:2rem;margin-bottom:8px}
+  .status-title{font-family:'Lora',serif;font-size:1rem;color:var(--gold2)}
+  .status-desc{font-size:.8rem;color:var(--muted);margin-top:6px;line-height:1.7}
+  .pulse{animation:pulse 2s ease infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+  /* Chat */
+  .chat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .chat-role{font-size:.75rem;color:var(--muted)}
+  .chat-role strong{color:var(--gold)}
+  .chat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);height:300px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;scroll-behavior:smooth}
+  .bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:.88rem;line-height:1.5;animation:fadeUp .2s ease both}
+  .bubble.mine{background:var(--gold);color:#0f0e0c;align-self:flex-end;border-bottom-right-radius:4px}
+  .bubble.theirs{background:var(--surface2);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px}
+  .bubble .btime{font-size:.68rem;opacity:.5;margin-top:4px}
+  .voice-bubble{display:flex;align-items:center;gap:10px;min-width:190px}
+  .vb-play{width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+  .bubble.mine .vb-play{background:rgba(0,0,0,.18);color:#0f0e0c}
+  .bubble.theirs .vb-play{background:var(--gold);color:#0f0e0c}
+  .vb-bars{display:flex;align-items:center;gap:2px;flex:1;height:28px}
+  .vb-bar{width:3px;border-radius:99px;flex-shrink:0}
+  .bubble.mine .vb-bar{background:rgba(0,0,0,.25)}
+  .bubble.theirs .vb-bar{background:var(--muted)}
+  .bubble.mine .vb-bar.played{background:rgba(0,0,0,.55)}
+  .bubble.theirs .vb-bar.played{background:var(--gold)}
+  .vb-dur{font-size:.7rem;opacity:.6;white-space:nowrap;min-width:30px;text-align:right}
+  .chat-input-row{display:flex;gap:8px;align-items:center}
+  .chat-input-row input{flex:1;margin-bottom:0}
+  .rec-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:0 14px;cursor:pointer;font-size:1.1rem;height:44px;transition:all .2s;color:var(--muted);flex-shrink:0}
+  .rec-btn.recording{border-color:var(--red);color:var(--red);animation:pulse .8s ease infinite}
+  .rec-bar{display:none;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--red);border-radius:10px;padding:10px 14px;margin-bottom:10px}
+  .rec-bar.active{display:flex}
+  .rec-dot{width:9px;height:9px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse .8s ease infinite}
+  .rec-label{font-size:.82rem;color:var(--red);flex:1}
+  .rec-time{font-size:.82rem;color:var(--muted);font-family:'Lora',serif}
+  .rec-cancel{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:4px 8px}
   /* Mod */
-  .mod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
-  .stat-num { font-family: 'Lora', serif; font-size: 1.8rem; color: var(--gold2); }
-  .stat-label { font-size: .72rem; color: var(--muted); margin-top: 2px; }
-  .session-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-  .session-info .si-title { font-size: .85rem; color: var(--cream); }
-  .session-info .si-sub { font-size: .75rem; color: var(--muted); margin-top: 2px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-  .dot-green { background: var(--green); }
-  .incoming-box { background: var(--surface); border: 1px solid var(--gold); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 16px; }
-  .incoming-box .icon { font-size: 2.4rem; margin-bottom: 10px; }
-  .incoming-title { font-family: 'Lora', serif; font-size: 1.1rem; color: var(--gold2); }
-  .incoming-sub { font-size: .8rem; color: var(--muted); margin: 8px 0 18px; }
-  .incoming-actions { display: flex; gap: 10px; justify-content: center; }
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--gold); border-radius: 30px; padding: 10px 20px; font-size: .82rem; color: var(--gold2); z-index: 999; animation: fadeUp .3s ease both; white-space: nowrap; }
-  .mood-btn { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 6px; cursor: pointer; text-align: center; transition: all .2s; flex: 1; margin: 0 3px; }
-  .mood-btn:hover, .mood-btn.selected { border-color: var(--gold); background: #2a2210; }
-  .mood-label { font-size: .62rem; color: var(--muted); margin-top: 5px; line-height: 1.3; }
-  .mood-btn.selected .mood-label { color: var(--gold2); }
-  .mt8 { margin-top: 8px; }
-  .empty-state { text-align: center; color: var(--muted); font-size: .82rem; padding: 20px; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+  .stat-num{font-family:'Lora',serif;font-size:1.8rem;color:var(--gold2)}
+  .stat-label{font-size:.72rem;color:var(--muted);margin-top:2px}
+  .session-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+  .session-info .si-title{font-size:.85rem;color:var(--cream)}
+  .session-info .si-sub{font-size:.75rem;color:var(--muted);margin-top:2px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+  .dot-green{background:var(--green)}
+  .incoming-box{background:var(--surface);border:1px solid var(--gold);border-radius:var(--radius);padding:24px;text-align:center;margin-bottom:16px}
+  .incoming-box .icon{font-size:2.4rem;margin-bottom:10px}
+  .incoming-title{font-family:'Lora',serif;font-size:1.1rem;color:var(--gold2)}
+  .incoming-sub{font-size:.8rem;color:var(--muted);margin:8px 0 18px}
+  .incoming-actions{display:flex;gap:10px;justify-content:center}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--gold);border-radius:30px;padding:10px 20px;font-size:.82rem;color:var(--gold2);z-index:999;animation:fadeUp .3s ease both;white-space:nowrap}
+  .mood-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .2s;flex:1;margin:0 3px}
+  .mood-btn:hover,.mood-btn.selected{border-color:var(--gold);background:#2a2210}
+  .mood-label{font-size:.62rem;color:var(--muted);margin-top:5px;line-height:1.3}
+  .mood-btn.selected .mood-label{color:var(--gold2)}
+  .mt8{margin-top:8px}
+  .empty-state{text-align:center;color:var(--muted);font-size:.82rem;padding:20px}
+  /* Dinding Curhat */
+  .wall-post{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;animation:fadeUp .3s ease both}
+  .wall-post-text{font-size:.88rem;color:var(--cream);line-height:1.6;margin-bottom:6px}
+  .wall-post-meta{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .wall-heart{cursor:pointer;transition:transform .15s;user-select:none}
+  .wall-heart:hover{transform:scale(1.2)}
+  .wall-heart.liked{color:var(--red)}
+  /* Tabs */
+  .tab-row{display:flex;gap:6px;margin-bottom:16px;background:var(--surface2);border-radius:10px;padding:4px}
+  .tab-btn{flex:1;background:transparent;border:none;padding:8px;border-radius:8px;font-size:.78rem;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+  .tab-btn.active{background:var(--surface);color:var(--gold2);border:1px solid var(--border)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
+  <!-- LANDING -->
   <div class="landing" id="screen-landing">
     <div class="logo">Teman <span>Curhat</span></div>
-    <div class="tagline">Ruang aman untuk bercerita</div>
+    <div class="tagline" id="t-tagline">Ruang aman untuk bercerita</div>
     <div class="divider"></div>
-    <button class="role-btn" onclick="showScreen('talker-join')"><span class="icon">💬</span><div><div class="rb-title">Saya ingin curhat</div><div class="rb-desc">Ceritakan apa yang kamu rasakan secara anonim</div></div></button>
-    <button class="role-btn" onclick="showScreen('listener-join')"><span class="icon">🫂</span><div><div class="rb-title">Saya listener</div><div class="rb-desc">Siap mendengarkan dan menemani</div></div></button>
-    <button class="role-btn" onclick="showScreen('mod-join')" style="opacity:.5"><span class="icon">🔒</span><div><div class="rb-title">Moderator</div><div class="rb-desc">Akses khusus pengelola</div></div></button>
+    <!-- Lang toggle -->
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('id')">🇮🇩 Indonesia</button>
+      <button class="lang-btn" onclick="setLang('en')">🇬🇧 English</button>
+    </div>
+    <!-- Menu utama -->
+    <button class="role-btn" onclick="showScreen('talker-join')">
+      <span class="icon">💬</span>
+      <div><div class="rb-title" id="t-curhat-title">Saya ingin curhat</div><div class="rb-desc" id="t-curhat-desc">Ceritakan apa yang kamu rasakan secara anonim</div></div>
+    </button>
+    <button class="role-btn" onclick="showScreen('listener-join')">
+      <span class="icon">🫂</span>
+      <div><div class="rb-title" id="t-listener-title">Saya listener</div><div class="rb-desc" id="t-listener-desc">Siap mendengarkan dan menemani</div></div>
+    </button>
+    <button class="role-btn accent" onclick="showScreen('wall')">
+      <span class="icon">🌿</span>
+      <div><div class="rb-title" id="t-wall-title">Dinding Curhat</div><div class="rb-desc" id="t-wall-desc">Baca & bagikan cerita anonim</div></div>
+    </button>
+    <button class="role-btn secondary" onclick="goAppointment()">
+      <span class="icon">📅</span>
+      <div><div class="rb-title" id="t-appt-title">Buat Jadwal Sesi</div><div class="rb-desc" id="t-appt-desc">Daftar sesi curhat terjadwal dengan pendengar</div></div>
+    </button>
+    <button class="role-btn secondary" onclick="showScreen('mod-join')" style="opacity:.45">
+      <span class="icon">🔒</span>
+      <div><div class="rb-title" id="t-mod-title">Moderator</div><div class="rb-desc" id="t-mod-desc">Akses khusus pengelola</div></div>
+    </button>
   </div>
 
+  <!-- TALKER JOIN -->
   <div class="screen" id="screen-talker-join">
-    <div class="back-link" onclick="showScreen('landing')">← Kembali</div>
-    <div class="card"><h2>Halo 👋</h2><p class="sub">Tidak perlu nama. Tidak ada yang menghakimi di sini.</p><p style="font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:20px">Kami akan menghubungkan kamu dengan seorang pendengar yang siap menemani. Semua percakapan bersifat anonim.</p><button class="btn btn-primary btn-full" onclick="talkerJoin()">Mulai Cerita</button></div>
+    <div class="back-link" onclick="showScreen('landing')">← <span id="t-back">Kembali</span></div>
+    <div class="card">
+      <h2 id="t-tj-h2">Halo 👋</h2>
+      <p class="sub" id="t-tj-sub">Tidak perlu nama. Tidak ada yang menghakimi di sini.</p>
+      <p style="font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:20px" id="t-tj-body">Kami akan menghubungkan kamu dengan seorang pendengar yang siap menemani. Semua percakapan bersifat anonim.</p>
+      <button class="btn btn-primary btn-full" onclick="talkerJoin()" id="t-tj-btn">Mulai Cerita</button>
+    </div>
   </div>
 
+  <!-- TALKER WAITING -->
   <div class="screen" id="screen-talker-waiting">
-    <div class="status-box"><div class="status-icon pulse">🕰️</div><div class="status-title">Mencari pendengar...</div><div class="status-desc">Semua pendengar sedang sibuk.<br>Kamu akan diberi tahu saat ada yang tersedia.</div></div>
-    <button class="btn btn-ghost btn-full" onclick="cancelQueue()">Batalkan</button>
+    <div class="status-box">
+      <div class="status-icon pulse">🕰️</div>
+      <div class="status-title" id="t-wait-title">Mencari pendengar...</div>
+      <div class="status-desc" id="t-wait-desc">Semua pendengar sedang sibuk.<br>Kamu akan diberi tahu saat ada yang tersedia.</div>
+    </div>
+    <button class="btn btn-ghost btn-full" style="margin-bottom:10px" onclick="cancelQueue()" id="t-wait-cancel">Batalkan</button>
+    <!-- Tinggalkan pesan kalau tidak ada pendengar -->
+    <div class="card" style="margin-top:8px">
+      <h2 style="font-size:1rem;margin-bottom:6px" id="t-lm-h2">💌 Tidak ada pendengar?</h2>
+      <p class="sub" style="margin-bottom:12px" id="t-lm-sub">Tinggalkan pesan dan kami akan menghubungi kamu, atau daftar sesi terjadwal.</p>
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="switchLeaveTab('message')" id="tab-msg-btn" id="t-lm-tab1">Tinggalkan Pesan</button>
+        <button class="tab-btn" onclick="switchLeaveTab('schedule')" id="tab-sched-btn" id="t-lm-tab2">Buat Jadwal</button>
+      </div>
+      <!-- Tab: Pesan -->
+      <div id="leave-message-panel">
+        <textarea id="leave-msg-text" style="margin-bottom:10px" placeholder="Ceritakan sedikit apa yang ingin kamu bicarakan..."></textarea>
+        <button class="btn btn-primary btn-full" onclick="kirimLeaveMsgFn()" id="t-lm-send">Kirim Pesan →</button>
+        <div id="leave-msg-done" style="display:none;text-align:center;padding:12px 0">
+          <div style="font-size:1.5rem;margin-bottom:6px">🙏</div>
+          <div style="font-size:.85rem;color:var(--gold2)" id="t-lm-done">Pesanmu sudah terkirim! Kami akan segera merespons.</div>
+        </div>
+      </div>
+      <!-- Tab: Jadwal -->
+      <div id="leave-schedule-panel" style="display:none;text-align:center;padding:10px 0">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px" id="t-sched-desc">Daftar sesi terjadwal dengan pendengar — tanpa perlu menunggu.</p>
+        <button class="btn btn-blue btn-full" onclick="goAppointment()" id="t-sched-btn">📅 Buat Jadwal Sesi →</button>
+      </div>
+    </div>
   </div>
 
+  <!-- CHAT -->
   <div class="screen" id="screen-chat">
     <div class="chat-header">
-      <div class="chat-role"><span class="dot dot-green"></span>Sesi aktif · <strong id="chat-role-label">—</strong></div>
-      <button class="btn btn-ghost" style="padding:6px 12px;font-size:.78rem" onclick="endSession()">Akhiri</button>
+      <div class="chat-role"><span class="dot dot-green"></span><span id="t-chat-active">Sesi aktif</span> · <strong id="chat-role-label">—</strong></div>
+      <button class="btn btn-ghost" style="padding:6px 12px;font-size:.78rem" onclick="endSession()" id="t-chat-end">Akhiri</button>
     </div>
     <div id="timer-wrap" style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-        <span style="font-size:.72rem;color:var(--muted)">⏱ Waktu sesi</span>
+        <span style="font-size:.72rem;color:var(--muted)" id="t-timer-label">⏱ Waktu sesi</span>
         <span id="timer-label" style="font-size:.78rem;color:var(--gold2);font-family:'Lora',serif">1:30:00</span>
       </div>
       <div style="background:var(--surface2);border-radius:99px;height:4px;overflow:hidden">
@@ -149,9 +225,9 @@
     <div class="chat-box" id="chat-box"></div>
     <div class="rec-bar" id="rec-bar">
       <div class="rec-dot"></div>
-      <div class="rec-label">Sedang merekam...</div>
+      <div class="rec-label" id="t-rec-label">Sedang merekam...</div>
       <div class="rec-time" id="rec-time">0:00</div>
-      <button class="rec-cancel" onclick="cancelRecording()">✕ Batal</button>
+      <button class="rec-cancel" onclick="cancelRecording()" id="t-rec-cancel">✕ Batal</button>
     </div>
     <div class="chat-input-row">
       <button class="rec-btn" id="rec-btn" onclick="toggleRecording()" title="Voice note">🎙️</button>
@@ -160,62 +236,123 @@
     </div>
   </div>
 
+  <!-- ENDED + FEEDBACK -->
   <div class="screen" id="screen-ended">
-    <div class="status-box"><div class="status-icon">🌿</div><div class="status-title">Sesi selesai</div><div class="status-desc" id="ended-msg">Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏</div></div>
+    <div class="status-box">
+      <div class="status-icon">🌿</div>
+      <div class="status-title" id="t-ended-title">Sesi selesai</div>
+      <div class="status-desc" id="ended-msg">Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏</div>
+    </div>
     <div id="feedback-section">
       <div class="card" style="margin-top:12px">
-        <h2 style="font-size:1rem;margin-bottom:6px">Bagaimana perasaanmu? 💭</h2>
-        <p class="sub" style="margin-bottom:14px">Anonim & tidak wajib.</p>
+        <h2 style="font-size:1rem;margin-bottom:6px" id="t-fb-h2">Bagaimana perasaanmu? 💭</h2>
+        <p class="sub" style="margin-bottom:14px" id="t-fb-sub">Anonim & tidak wajib.</p>
         <div style="display:flex;justify-content:space-between;margin-bottom:16px">
-          <button class="mood-btn" data-mood="Jauh lebih lega" onclick="pilihMood(this)"><div style="font-size:1.6rem">😌</div><div class="mood-label">Jauh lebih lega</div></button>
-          <button class="mood-btn" data-mood="Lebih baik" onclick="pilihMood(this)"><div style="font-size:1.6rem">🙂</div><div class="mood-label">Lebih baik</div></button>
-          <button class="mood-btn" data-mood="Biasa saja" onclick="pilihMood(this)"><div style="font-size:1.6rem">😐</div><div class="mood-label">Biasa saja</div></button>
-          <button class="mood-btn" data-mood="Masih berat" onclick="pilihMood(this)"><div style="font-size:1.6rem">😔</div><div class="mood-label">Masih berat</div></button>
+          <button class="mood-btn" data-mood="Jauh lebih lega" onclick="pilihMood(this)"><div style="font-size:1.6rem">😌</div><div class="mood-label" id="t-m1">Jauh lebih lega</div></button>
+          <button class="mood-btn" data-mood="Lebih baik" onclick="pilihMood(this)"><div style="font-size:1.6rem">🙂</div><div class="mood-label" id="t-m2">Lebih baik</div></button>
+          <button class="mood-btn" data-mood="Biasa saja" onclick="pilihMood(this)"><div style="font-size:1.6rem">😐</div><div class="mood-label" id="t-m3">Biasa saja</div></button>
+          <button class="mood-btn" data-mood="Masih berat" onclick="pilihMood(this)"><div style="font-size:1.6rem">😔</div><div class="mood-label" id="t-m4">Masih berat</div></button>
         </div>
-        <textarea id="feedback-text" placeholder="Ada yang ingin kamu sampaikan? (opsional)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:.85rem;line-height:1.6;resize:none;outline:none;min-height:80px;margin-bottom:12px"></textarea>
-        <button class="btn btn-primary btn-full" id="feedback-btn" onclick="kirimFeedback()">Kirim Feedback →</button>
-        <button class="btn btn-ghost btn-full mt8" onclick="resetApp()">Lewati</button>
+        <textarea id="feedback-text" placeholder="Ada yang ingin kamu sampaikan? (opsional)"></textarea>
+        <button class="btn btn-primary btn-full" id="feedback-btn" onclick="kirimFeedback()" style="margin-bottom:8px">Kirim Feedback →</button>
+        <button class="btn btn-ghost btn-full" onclick="resetApp()" id="t-fb-skip">Lewati</button>
       </div>
     </div>
     <div id="feedback-done" style="display:none;text-align:center;padding:20px 0">
       <div style="font-size:2rem;margin-bottom:10px">🙏</div>
-      <div style="font-family:'Lora',serif;color:var(--gold2);margin-bottom:6px">Terima kasih!</div>
-      <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="resetApp()">Kembali ke Beranda</button>
+      <div style="font-family:'Lora',serif;color:var(--gold2);margin-bottom:6px" id="t-fb-thanks">Terima kasih!</div>
+      <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="resetApp()" id="t-fb-home">Kembali ke Beranda</button>
     </div>
   </div>
 
+  <!-- LISTENER JOIN -->
   <div class="screen" id="screen-listener-join">
-    <div class="back-link" onclick="showScreen('landing')">← Kembali</div>
-    <div class="card"><h2>Login Listener 🫂</h2><p class="sub">Masuk dengan kode yang diberikan koordinator</p><label>Nama panggilanmu</label><input type="text" id="listener-alias" placeholder="mis. Kak Reza" /><label>Kode Listener</label><input type="password" id="listener-secret" placeholder="••••••••" /><button class="btn btn-primary btn-full" onclick="listenerJoin()">Masuk sebagai Listener</button></div>
-  </div>
-
-  <div class="screen" id="screen-listener-standby">
-    <div class="status-box"><div class="status-icon">🫂</div><div class="status-title">Kamu online, <span id="listener-name-label">—</span></div><div class="status-desc">Menunggu seseorang yang butuh teman bicara...</div></div>
-    <div class="status-box" style="background:var(--surface2)"><div class="status-icon">💡</div><div class="status-title" style="font-size:.9rem">Tips Mendengarkan</div><div class="status-desc" style="text-align:left;margin-top:10px;line-height:2">• Dengarkan tanpa menghakimi<br>• Validasi perasaan mereka<br>• Tidak perlu memberi solusi<br>• Hadir dengan tulus 🙏</div></div>
-    <button class="btn btn-ghost btn-full" onclick="listenerLogout()">Keluar</button>
-  </div>
-
-  <div class="screen" id="screen-listener-incoming">
-    <div class="incoming-box"><div class="icon">🔔</div><div class="incoming-title">Ada yang ingin curhat</div><div class="incoming-sub">Seseorang membutuhkan teman bicara sekarang.</div><div class="incoming-actions"><button class="btn btn-primary" onclick="listenerAccept()">Terima 🤝</button><button class="btn btn-ghost" onclick="listenerReject()">Lewati</button></div></div>
-  </div>
-
-  <div class="screen" id="screen-mod-join">
-    <div class="back-link" onclick="showScreen('landing')">← Kembali</div>
-    <div class="card"><h2>🔒 Moderator</h2><p class="sub">Akses khusus pengelola</p><label>Password</label><input type="password" id="mod-secret" placeholder="••••••••" onkeydown="if(event.key==='Enter')modJoin()" /><button class="btn btn-primary btn-full" onclick="modJoin()">Masuk</button></div>
-  </div>
-
-  <div class="screen" id="screen-mod-dashboard">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div class="logo" style="font-size:1.3rem">Teman <span>Curhat</span></div><div style="font-size:.72rem;color:var(--green)"><span class="dot dot-green"></span>Moderator</div></div>
-    <div class="mod-grid">
-      <div class="stat-card"><div class="stat-num" id="mod-listener-count">0</div><div class="stat-label">Listener Online</div></div>
-      <div class="stat-card"><div class="stat-num" id="mod-session-count">0</div><div class="stat-label">Sesi Aktif</div></div>
-      <div class="stat-card"><div class="stat-num" id="mod-queue-count">0</div><div class="stat-label">Antrian</div></div>
-      <div class="stat-card"><div class="stat-num" id="mod-talker-count">0</div><div class="stat-label">Talker Online</div></div>
+    <div class="back-link" onclick="showScreen('landing')">← <span class="t-back">Kembali</span></div>
+    <div class="card">
+      <h2 id="t-lj-h2">Login Listener 🫂</h2>
+      <p class="sub" id="t-lj-sub">Masuk dengan kode yang diberikan koordinator</p>
+      <label id="t-lj-name">Nama panggilanmu</label>
+      <input type="text" id="listener-alias" placeholder="mis. Kak Reza" />
+      <label id="t-lj-code">Kode Listener</label>
+      <input type="password" id="listener-secret" placeholder="••••••••" />
+      <button class="btn btn-primary btn-full" onclick="listenerJoin()" id="t-lj-btn">Masuk sebagai Listener</button>
     </div>
-    <h2 style="margin-bottom:10px">Sesi Aktif</h2>
-    <div id="mod-sessions"><div class="empty-state">Belum ada sesi aktif</div></div>
+  </div>
+
+  <!-- LISTENER STANDBY -->
+  <div class="screen" id="screen-listener-standby">
+    <div class="status-box">
+      <div class="status-icon">🫂</div>
+      <div class="status-title"><span id="t-ls-online">Kamu online</span>, <span id="listener-name-label">—</span></div>
+      <div class="status-desc" id="t-ls-desc">Menunggu seseorang yang butuh teman bicara...</div>
+    </div>
+    <div class="status-box" style="background:var(--surface2)">
+      <div class="status-icon">💡</div>
+      <div class="status-title" style="font-size:.9rem" id="t-tips-title">Tips Mendengarkan</div>
+      <div class="status-desc" style="text-align:left;margin-top:10px;line-height:2" id="t-tips-body">
+        • Dengarkan tanpa menghakimi<br>• Validasi perasaan mereka<br>• Tidak perlu memberi solusi<br>• Hadir dengan tulus 🙏
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-full" onclick="listenerLogout()" id="t-ls-logout">Keluar</button>
+  </div>
+
+  <!-- LISTENER INCOMING -->
+  <div class="screen" id="screen-listener-incoming">
+    <div class="incoming-box">
+      <div class="icon">🔔</div>
+      <div class="incoming-title" id="t-inc-title">Ada yang ingin curhat</div>
+      <div class="incoming-sub" id="t-inc-sub">Seseorang membutuhkan teman bicara sekarang.</div>
+      <div class="incoming-actions">
+        <button class="btn btn-primary" onclick="listenerAccept()" id="t-inc-accept">Terima 🤝</button>
+        <button class="btn btn-ghost" onclick="listenerReject()" id="t-inc-reject">Lewati</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOD JOIN -->
+  <div class="screen" id="screen-mod-join">
+    <div class="back-link" onclick="showScreen('landing')">← <span class="t-back">Kembali</span></div>
+    <div class="card">
+      <h2>🔒 Moderator</h2>
+      <p class="sub" id="t-mj-sub">Akses khusus pengelola</p>
+      <label id="t-mj-pw">Password</label>
+      <input type="password" id="mod-secret" placeholder="••••••••" onkeydown="if(event.key==='Enter')modJoin()" />
+      <button class="btn btn-primary btn-full" onclick="modJoin()" id="t-mj-btn">Masuk</button>
+    </div>
+  </div>
+
+  <!-- MOD DASHBOARD -->
+  <div class="screen" id="screen-mod-dashboard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="logo" style="font-size:1.3rem">Teman <span>Curhat</span></div>
+      <div style="font-size:.72rem;color:var(--green)"><span class="dot dot-green"></span>Moderator</div>
+    </div>
+    <div class="mod-grid">
+      <div class="stat-card"><div class="stat-num" id="mod-listener-count">0</div><div class="stat-label" id="t-md-l">Listener Online</div></div>
+      <div class="stat-card"><div class="stat-num" id="mod-session-count">0</div><div class="stat-label" id="t-md-s">Sesi Aktif</div></div>
+      <div class="stat-card"><div class="stat-num" id="mod-queue-count">0</div><div class="stat-label" id="t-md-q">Antrian</div></div>
+      <div class="stat-card"><div class="stat-num" id="mod-talker-count">0</div><div class="stat-label" id="t-md-t">Talker Online</div></div>
+    </div>
+    <h2 style="margin-bottom:10px" id="t-md-active">Sesi Aktif</h2>
+    <div id="mod-sessions"><div class="empty-state" id="t-md-empty">Belum ada sesi aktif</div></div>
     <button class="btn btn-ghost btn-full" style="margin-top:12px" onclick="modRefresh()">🔄 Refresh</button>
   </div>
+
+  <!-- DINDING CURHAT -->
+  <div class="screen" id="screen-wall">
+    <div class="back-link" onclick="showScreen('landing')">← <span class="t-back">Kembali</span></div>
+    <h2 style="margin-bottom:4px" id="t-wall-h2">🌿 Dinding Curhat</h2>
+    <p class="sub" id="t-wall-sub">Cerita anonim dari sesama. Kamu tidak sendirian.</p>
+    <!-- Tulis post -->
+    <div class="card" style="margin-bottom:16px">
+      <label id="t-wall-write">Bagikan perasaanmu (anonim)</label>
+      <textarea id="wall-input" placeholder="Ceritakan apa yang kamu rasakan..." style="margin-bottom:10px;min-height:80px"></textarea>
+      <button class="btn btn-primary btn-full" onclick="postToWall()" id="t-wall-post-btn">Bagikan →</button>
+    </div>
+    <!-- Feed -->
+    <div id="wall-feed"><div class="empty-state" id="t-wall-loading">Memuat cerita...</div></div>
+  </div>
+
 </div>
 
 <script>
@@ -226,448 +363,562 @@ const SUPABASE_URL     = "https://acetdjwzrydmoonzpevz.supabase.co";
 const SUPABASE_ANON_KEY= "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjZXRkand6cnlkbW9vbnpwZXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTE2NDYsImV4cCI6MjA5MjgyNzY0Nn0.xOqG_ciBo2LpZGcZ5woZQrXybPdQ9eb3hMn3cwYt2wU";
 const LISTENER_SECRET  = "listener123";
 const MODERATOR_SECRET = "mod999";
-const SESSION_DURATION = 90 * 60; // 90 menit
-const POLL_INTERVAL    = 3000;    // 3 detik polling
+const SESSION_DURATION = 90*60;
+const POLL_MS          = 3000;
+const STALE_MS         = 15000;
+const WEB3FORMS_KEY    = "aef72916-a9d4-424f-b8ee-eb5d5b15c0c2";
+const APPOINTMENT_URL  = "appointment.html";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══════════════════════════════════════
+// BILINGUAL
+// ═══════════════════════════════════════
+let currentLang = "id";
+const T = {
+  id: {
+    tagline:"Ruang aman untuk bercerita",
+    "curhat-title":"Saya ingin curhat","curhat-desc":"Ceritakan apa yang kamu rasakan secara anonim",
+    "listener-title":"Saya listener","listener-desc":"Siap mendengarkan dan menemani",
+    "wall-title":"Dinding Curhat","wall-desc":"Baca & bagikan cerita anonim",
+    "appt-title":"Buat Jadwal Sesi","appt-desc":"Daftar sesi curhat terjadwal dengan pendengar",
+    "mod-title":"Moderator","mod-desc":"Akses khusus pengelola",
+    back:"Kembali",
+    "tj-h2":"Halo 👋","tj-sub":"Tidak perlu nama. Tidak ada yang menghakimi di sini.",
+    "tj-body":"Kami akan menghubungkan kamu dengan seorang pendengar yang siap menemani. Semua percakapan bersifat anonim.",
+    "tj-btn":"Mulai Cerita",
+    "wait-title":"Mencari pendengar...","wait-desc":"Semua pendengar sedang sibuk.\nKamu akan diberi tahu saat ada yang tersedia.",
+    "wait-cancel":"Batalkan",
+    "lm-h2":"💌 Tidak ada pendengar?","lm-sub":"Tinggalkan pesan dan kami akan menghubungi kamu, atau daftar sesi terjadwal.",
+    "lm-tab1":"Tinggalkan Pesan","lm-tab2":"Buat Jadwal",
+    "lm-send":"Kirim Pesan →","lm-done":"Pesanmu sudah terkirim! Kami akan segera merespons.",
+    "sched-desc":"Daftar sesi terjadwal dengan pendengar — tanpa perlu menunggu.",
+    "sched-btn":"📅 Buat Jadwal Sesi →",
+    "chat-active":"Sesi aktif","chat-end":"Akhiri","timer-label":"⏱ Waktu sesi",
+    "rec-label":"Sedang merekam...","rec-cancel":"✕ Batal",
+    "ended-title":"Sesi selesai",
+    "fb-h2":"Bagaimana perasaanmu? 💭","fb-sub":"Anonim & tidak wajib.",
+    "fb-skip":"Lewati","fb-thanks":"Terima kasih!","fb-home":"Kembali ke Beranda",
+    m1:"Jauh lebih lega",m2:"Lebih baik",m3:"Biasa saja",m4:"Masih berat",
+    "lj-h2":"Login Listener 🫂","lj-sub":"Masuk dengan kode yang diberikan koordinator",
+    "lj-name":"Nama panggilanmu","lj-code":"Kode Listener","lj-btn":"Masuk sebagai Listener",
+    "ls-online":"Kamu online","ls-desc":"Menunggu seseorang yang butuh teman bicara...",
+    "tips-title":"Tips Mendengarkan",
+    "tips-body":"• Dengarkan tanpa menghakimi<br>• Validasi perasaan mereka<br>• Tidak perlu memberi solusi<br>• Hadir dengan tulus 🙏",
+    "ls-logout":"Keluar",
+    "inc-title":"Ada yang ingin curhat","inc-sub":"Seseorang membutuhkan teman bicara sekarang.",
+    "inc-accept":"Terima 🤝","inc-reject":"Lewati",
+    "mj-sub":"Akses khusus pengelola","mj-pw":"Password","mj-btn":"Masuk",
+    "md-l":"Listener Online","md-s":"Sesi Aktif","md-q":"Antrian","md-t":"Talker Online",
+    "md-active":"Sesi Aktif","md-empty":"Belum ada sesi aktif",
+    "wall-h2":"🌿 Dinding Curhat","wall-sub":"Cerita anonim dari sesama. Kamu tidak sendirian.",
+    "wall-write":"Bagikan perasaanmu (anonim)","wall-post-btn":"Bagikan →",
+    "wall-loading":"Memuat cerita...",
+  },
+  en: {
+    tagline:"A safe space to share",
+    "curhat-title":"I want to share","curhat-desc":"Tell us how you feel, anonymously",
+    "listener-title":"I am a listener","listener-desc":"Ready to listen and accompany",
+    "wall-title":"Sharing Wall","wall-desc":"Read & share anonymous stories",
+    "appt-title":"Schedule a Session","appt-desc":"Book a session with a listener in advance",
+    "mod-title":"Moderator","mod-desc":"Admin access only",
+    back:"Back",
+    "tj-h2":"Hello 👋","tj-sub":"No name needed. No judgment here.",
+    "tj-body":"We'll connect you with a listener ready to accompany you. All conversations are anonymous.",
+    "tj-btn":"Start Sharing",
+    "wait-title":"Looking for a listener...","wait-desc":"All listeners are busy right now.\nYou'll be notified when one becomes available.",
+    "wait-cancel":"Cancel",
+    "lm-h2":"💌 No listener available?","lm-sub":"Leave a message and we'll get back to you, or schedule a session.",
+    "lm-tab1":"Leave a Message","lm-tab2":"Schedule",
+    "lm-send":"Send Message →","lm-done":"Your message was sent! We'll get back to you soon.",
+    "sched-desc":"Book a scheduled session with a listener — no waiting required.",
+    "sched-btn":"📅 Schedule a Session →",
+    "chat-active":"Active session","chat-end":"End","timer-label":"⏱ Session time",
+    "rec-label":"Recording...","rec-cancel":"✕ Cancel",
+    "ended-title":"Session ended",
+    "fb-h2":"How are you feeling? 💭","fb-sub":"Anonymous & optional.",
+    "fb-skip":"Skip","fb-thanks":"Thank you!","fb-home":"Back to Home",
+    m1:"Much better",m2:"Better",m3:"Same",m4:"Still heavy",
+    "lj-h2":"Listener Login 🫂","lj-sub":"Enter the code given by your coordinator",
+    "lj-name":"Your nickname","lj-code":"Listener Code","lj-btn":"Login as Listener",
+    "ls-online":"You're online","ls-desc":"Waiting for someone who needs a friend...",
+    "tips-title":"Listening Tips",
+    "tips-body":"• Listen without judgment<br>• Validate their feelings<br>• You don't need to give solutions<br>• Be genuinely present 🙏",
+    "ls-logout":"Logout",
+    "inc-title":"Someone wants to share","inc-sub":"Someone needs a friend to talk to right now.",
+    "inc-accept":"Accept 🤝","inc-reject":"Pass",
+    "mj-sub":"Admin access only","mj-pw":"Password","mj-btn":"Login",
+    "md-l":"Listeners Online","md-s":"Active Sessions","md-q":"Queue","md-t":"Talkers Online",
+    "md-active":"Active Sessions","md-empty":"No active sessions",
+    "wall-h2":"🌿 Sharing Wall","wall-sub":"Anonymous stories from others. You are not alone.",
+    "wall-write":"Share how you feel (anonymous)","wall-post-btn":"Share →",
+    "wall-loading":"Loading stories...",
+  }
+};
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll(".lang-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add("active");
+  const t = T[lang];
+  const map = {
+    "t-tagline":"tagline","t-curhat-title":"curhat-title","t-curhat-desc":"curhat-desc",
+    "t-listener-title":"listener-title","t-listener-desc":"listener-desc",
+    "t-wall-title":"wall-title","t-wall-desc":"wall-desc",
+    "t-appt-title":"appt-title","t-appt-desc":"appt-desc",
+    "t-mod-title":"mod-title","t-mod-desc":"mod-desc",
+    "t-back":"back",
+    "t-tj-h2":"tj-h2","t-tj-sub":"tj-sub","t-tj-body":"tj-body","t-tj-btn":"tj-btn",
+    "t-wait-title":"wait-title","t-wait-desc":"wait-desc","t-wait-cancel":"wait-cancel",
+    "t-lm-h2":"lm-h2","t-lm-sub":"lm-sub","t-lm-send":"lm-send","t-lm-done":"lm-done",
+    "t-sched-desc":"sched-desc","t-sched-btn":"sched-btn",
+    "t-chat-active":"chat-active","t-chat-end":"chat-end","t-timer-label":"timer-label",
+    "t-rec-label":"rec-label","t-rec-cancel":"rec-cancel",
+    "t-ended-title":"ended-title",
+    "t-fb-h2":"fb-h2","t-fb-sub":"fb-sub","t-fb-skip":"fb-skip",
+    "t-fb-thanks":"fb-thanks","t-fb-home":"fb-home",
+    "t-m1":"m1","t-m2":"m2","t-m3":"m3","t-m4":"m4",
+    "t-lj-h2":"lj-h2","t-lj-sub":"lj-sub","t-lj-name":"lj-name",
+    "t-lj-code":"lj-code","t-lj-btn":"lj-btn",
+    "t-ls-online":"ls-online","t-ls-desc":"ls-desc","t-ls-logout":"ls-logout",
+    "t-tips-title":"tips-title","t-tips-body":"tips-body",
+    "t-inc-title":"inc-title","t-inc-sub":"inc-sub",
+    "t-inc-accept":"inc-accept","t-inc-reject":"inc-reject",
+    "t-mj-sub":"mj-sub","t-mj-pw":"mj-pw","t-mj-btn":"mj-btn",
+    "t-md-l":"md-l","t-md-s":"md-s","t-md-q":"md-q","t-md-t":"md-t",
+    "t-md-active":"md-active","t-md-empty":"md-empty",
+    "t-wall-h2":"wall-h2","t-wall-sub":"wall-sub",
+    "t-wall-write":"wall-write","t-wall-post-btn":"wall-post-btn",
+    "t-wall-loading":"wall-loading",
+  };
+  for(const [id,key] of Object.entries(map)){
+    const el=document.getElementById(id); if(el && t[key]) el.innerHTML=t[key];
+  }
+  // Also update all .t-back spans
+  document.querySelectorAll(".t-back").forEach(el=>el.textContent=t.back);
+  document.getElementById("chat-input").placeholder = lang==="id"?"Ketik pesan...":"Type a message...";
+  document.getElementById("wall-input").placeholder = lang==="id"?"Ceritakan apa yang kamu rasakan...":"Share how you feel...";
+  document.getElementById("leave-msg-text").placeholder = lang==="id"?"Ceritakan sedikit apa yang ingin kamu bicarakan...":"Tell us a bit about what you'd like to talk about...";
+  document.getElementById("tab-msg-btn").textContent = t["lm-tab1"];
+  document.getElementById("tab-sched-btn").textContent = t["lm-tab2"];
+}
+
+// ═══════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════
-let myRole = null, myId = null, myListenerId = null;
-let currentSessionId = null, selectedMood = null;
-let timerInterval = null, timerSeconds = 0;
-let pollInterval = null;
-let lastMsgTs = 0;
-let sessionAudioFiles = [];
-// Voice recording
-let mediaRecorder = null, audioChunks = [], isRecording = false;
-let recTimerInterval = null, recSeconds = 0;
-// Playback
-let currentAudio = null, currentAudioId = null, audioProgressInterval = null;
+let myRole=null,myId=null,myListenerId=null;
+let currentSessionId=null,selectedMood=null;
+let timerInterval=null,timerSeconds=0;
+let pollInterval=null,lastMsgTs=0;
+let sessionAudioFiles=[];
+let mediaRecorder=null,audioChunks=[],isRecording=false;
+let recTimerInterval=null,recSeconds=0;
+let currentAudio=null,currentAudioId=null,audioProgressInterval=null;
 
 // ═══════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════
-function genId() { return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now(); }
-function showScreen(name) {
+function genId(){return crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now();}
+function showScreen(name){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  document.getElementById("screen-landing").style.display = name==="landing"?"block":"none";
-  const el = document.getElementById("screen-"+name);
-  if(el) el.classList.add("active");
+  document.getElementById("screen-landing").style.display=name==="landing"?"block":"none";
+  const el=document.getElementById("screen-"+name);
+  if(el){el.classList.add("active");if(name==="wall")loadWall();}
 }
-function showToast(msg, dur=3000) {
+function showToast(msg,dur=3000){
   document.querySelector(".toast")?.remove();
-  const t=document.createElement("div"); t.className="toast"; t.textContent=msg;
-  document.body.appendChild(t); setTimeout(()=>t.remove(), dur);
+  const t=document.createElement("div");t.className="toast";t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),dur);
 }
-function fmtTime(ts){ return new Date(ts).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"}); }
-function fmtDur(s){ return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`; }
-function stopAllPolls(){ if(pollInterval){ clearInterval(pollInterval); pollInterval=null; } }
+function fmtTime(ts){return new Date(ts).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});}
+function fmtDur(s){return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;}
+function stopAllPolls(){if(pollInterval){clearInterval(pollInterval);pollInterval=null;}}
+function goAppointment(){window.open(APPOINTMENT_URL,"_blank");}
 
 // ═══════════════════════════════════════
-// CLEANUP DB — hapus data stale
+// KEEPALIVE FETCH
 // ═══════════════════════════════════════
-async function cleanupStale() {
-  // Hapus listener yang last_seen > 2 menit lalu
-  const cutoff = new Date(Date.now() - 2*60*1000).toISOString();
-  await sb.from("listeners").delete().lt("last_seen", cutoff);
-  // Hapus queue yang created_at > 30 menit lalu
-  const qCutoff = new Date(Date.now() - 30*60*1000).toISOString();
-  await sb.from("queue").delete().lt("created_at", qCutoff).eq("status","waiting");
+function sbPatch(table,filter,body){
+  return fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`,{
+    method:"PATCH",keepalive:true,
+    headers:{"Content-Type":"application/json","apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Prefer":"return=minimal"},
+    body:JSON.stringify(body)
+  });
+}
+function sbDel(table,filter){
+  return fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`,{
+    method:"DELETE",keepalive:true,
+    headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY}
+  });
+}
+
+// ═══════════════════════════════════════
+// STALE CLEANUP
+// ═══════════════════════════════════════
+async function cleanupStale(){
+  const cutoff=new Date(Date.now()-STALE_MS).toISOString();
+  const {data:stale}=await sb.from("listeners").select("id").lt("last_seen",cutoff).neq("status","busy");
+  if(stale?.length){
+    const ids=stale.map(l=>l.id);
+    for(const id of ids){
+      const {data:sess}=await sb.from("sessions").select("id").eq("listener_id",id).eq("status","active").limit(1);
+      if(sess?.length) await sb.from("sessions").update({status:"ended"}).eq("id",sess[0].id);
+    }
+    await sb.from("listeners").delete().in("id",ids);
+  }
+  const qCutoff=new Date(Date.now()-30*60*1000).toISOString();
+  await sb.from("queue").delete().lt("created_at",qCutoff).eq("status","waiting");
+}
+
+// ═══════════════════════════════════════
+// TINGGALKAN PESAN
+// ═══════════════════════════════════════
+function switchLeaveTab(tab){
+  const isMsg=tab==="message";
+  document.getElementById("leave-message-panel").style.display=isMsg?"block":"none";
+  document.getElementById("leave-schedule-panel").style.display=isMsg?"none":"block";
+  document.getElementById("tab-msg-btn").classList.toggle("active",isMsg);
+  document.getElementById("tab-sched-btn").classList.toggle("active",!isMsg);
+}
+
+async function kirimLeaveMsgFn(){
+  const text=document.getElementById("leave-msg-text").value.trim();
+  if(!text){showToast("Tulis pesan dulu ya 🙏");return;}
+  const btn=document.querySelector("#leave-message-panel .btn-primary");
+  btn.disabled=true;btn.textContent="Mengirim...";
+  try{
+    await fetch("https://api.web3forms.com/submit",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({access_key:WEB3FORMS_KEY,subject:"[Teman Curhat] Pesan dari Talker",pesan:text})
+    });
+  }catch(e){}
+  document.getElementById("leave-msg-text").style.display="none";
+  btn.style.display="none";
+  document.getElementById("leave-msg-done").style.display="block";
+}
+
+// ═══════════════════════════════════════
+// DINDING CURHAT
+// ═══════════════════════════════════════
+const likedPosts=new Set(JSON.parse(localStorage.getItem("tc_liked")||"[]"));
+
+async function loadWall(){
+  const feed=document.getElementById("wall-feed");
+  feed.innerHTML=`<div class="empty-state" id="t-wall-loading">${T[currentLang]["wall-loading"]}</div>`;
+  const {data,error}=await sb.from("wall_posts").select("*").order("created_at",{ascending:false}).limit(30);
+  if(error||!data?.length){
+    feed.innerHTML=`<div class="empty-state">${currentLang==="id"?"Belum ada cerita. Jadilah yang pertama berbagi!":"No stories yet. Be the first to share!"}</div>`;
+    return;
+  }
+  feed.innerHTML=data.map(p=>{
+    const liked=likedPosts.has(p.id);
+    const ago=timeAgo(p.created_at);
+    return `<div class="wall-post">
+      <div class="wall-post-text">${escHtml(p.content)}</div>
+      <div class="wall-post-meta">
+        <span>${ago}</span>
+        <span class="wall-heart ${liked?"liked":""}" onclick="toggleHeart('${p.id}',this,${p.likes||0})">
+          ${liked?"❤️":"🤍"} <span class="heart-count">${p.likes||0}</span>
+        </span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function postToWall(){
+  const txt=document.getElementById("wall-input").value.trim();
+  if(!txt){showToast("Tulis sesuatu dulu ya 🙏");return;}
+  if(txt.length<5){showToast("Terlalu pendek 🙏");return;}
+  const btn=document.getElementById("t-wall-post-btn");
+  btn.disabled=true;
+  const {error}=await sb.from("wall_posts").insert({content:txt,likes:0});
+  document.getElementById("wall-input").value="";
+  btn.disabled=false;
+  if(error){showToast("❌ Gagal posting");return;}
+  showToast(currentLang==="id"?"Ceritamu sudah dibagikan 🌿":"Your story has been shared 🌿");
+  await loadWall();
+}
+
+async function toggleHeart(id,el,currentLikes){
+  if(likedPosts.has(id)){
+    likedPosts.delete(id);
+    el.classList.remove("liked");
+    el.innerHTML=`🤍 <span class="heart-count">${Math.max(0,currentLikes-1)}</span>`;
+    await sb.from("wall_posts").update({likes:Math.max(0,currentLikes-1)}).eq("id",id);
+  } else {
+    likedPosts.add(id);
+    el.classList.add("liked");
+    el.innerHTML=`❤️ <span class="heart-count">${currentLikes+1}</span>`;
+    await sb.from("wall_posts").update({likes:currentLikes+1}).eq("id",id);
+  }
+  localStorage.setItem("tc_liked",JSON.stringify([...likedPosts]));
+}
+
+function timeAgo(ts){
+  const diff=Math.floor((Date.now()-new Date(ts))/1000);
+  if(diff<60) return currentLang==="id"?"Baru saja":"Just now";
+  if(diff<3600) return currentLang==="id"?`${Math.floor(diff/60)} menit lalu`:`${Math.floor(diff/60)}m ago`;
+  if(diff<86400) return currentLang==="id"?`${Math.floor(diff/3600)} jam lalu`:`${Math.floor(diff/3600)}h ago`;
+  return currentLang==="id"?`${Math.floor(diff/86400)} hari lalu`:`${Math.floor(diff/86400)}d ago`;
 }
 
 // ═══════════════════════════════════════
 // TALKER FLOW
 // ═══════════════════════════════════════
-async function talkerJoin() {
-  myRole = "talker";
-  myId = genId();
-
-  // Bersihkan data stale dulu
+async function talkerJoin(){
+  myRole="talker"; myId=genId();
   await cleanupStale();
-
-  // Masuk ke queue
-  const { error } = await sb.from("queue").insert({ talker_id: myId, status: "waiting" });
-  if(error){ showToast("❌ Gagal bergabung: "+error.message); return; }
-
+  const {error}=await sb.from("queue").insert({talker_id:myId,status:"waiting"});
+  if(error){showToast("❌ Gagal bergabung: "+error.message);return;}
   showScreen("talker-waiting");
-  startTalkerPolling();
-}
-
-function startTalkerPolling() {
+  document.getElementById("leave-msg-done").style.display="none";
+  document.getElementById("leave-msg-text").style.display="block";
+  document.querySelector("#leave-message-panel .btn-primary").style.display="flex";
+  document.querySelector("#leave-message-panel .btn-primary").disabled=false;
+  document.querySelector("#leave-message-panel .btn-primary").textContent=T[currentLang]["lm-send"];
+  let tick=0;
   stopAllPolls();
-  pollInterval = setInterval(async () => {
-    // Cek apakah sudah ada sesi untuk talker ini
-    const { data: sessions } = await sb.from("sessions")
-      .select("*").eq("talker_id", myId).eq("status","active").limit(1);
-    if(sessions && sessions.length > 0) {
+  pollInterval=setInterval(async()=>{
+    tick++;
+    if(tick%5===0) await cleanupStale();
+    const {data:sess}=await sb.from("sessions").select("*").eq("talker_id",myId).eq("status","active").limit(1);
+    if(sess?.length){
       stopAllPolls();
-      await sb.from("queue").delete().eq("talker_id", myId);
-      startChatSession(sessions[0].id, false);
+      await sb.from("queue").delete().eq("talker_id",myId);
+      startChatSession(sess[0].id,false);
     }
-  }, POLL_INTERVAL);
+  },POLL_MS);
 }
 
-async function cancelQueue() {
+async function cancelQueue(){
   stopAllPolls();
-  await sb.from("queue").delete().eq("talker_id", myId);
-  myId = null; myRole = null;
-  showScreen("landing");
+  await sb.from("queue").delete().eq("talker_id",myId);
+  myId=null;myRole=null;showScreen("landing");
 }
 
 // ═══════════════════════════════════════
 // LISTENER FLOW
 // ═══════════════════════════════════════
-async function listenerJoin() {
-  const alias  = document.getElementById("listener-alias").value.trim();
-  const secret = document.getElementById("listener-secret").value.trim();
-  if(!alias){ showToast("Masukkan nama panggilanmu"); return; }
-  if(secret !== LISTENER_SECRET){ showToast("❌ Kode rahasia salah"); return; }
-
-  myRole = "listener";
-  myId = genId();
-  myListenerId = myId;
-
-  const { error } = await sb.from("listeners").insert({
-    id: myId, alias, busy: false, last_seen: new Date().toISOString(), status: "online"
-  });
-  if(error){ showToast("❌ Gagal masuk: "+error.message); return; }
-
-  document.getElementById("listener-name-label").textContent = alias;
+async function listenerJoin(){
+  const alias=document.getElementById("listener-alias").value.trim();
+  const secret=document.getElementById("listener-secret").value.trim();
+  if(!alias){showToast("Masukkan nama panggilanmu");return;}
+  if(secret!==LISTENER_SECRET){showToast("❌ Kode rahasia salah");return;}
+  myRole="listener";myId=genId();myListenerId=myId;
+  const {error}=await sb.from("listeners").insert({id:myId,alias,busy:false,status:"online",last_seen:new Date().toISOString()});
+  if(error){showToast("❌ Gagal masuk: "+error.message);myRole=null;myId=null;myListenerId=null;return;}
+  document.getElementById("listener-name-label").textContent=alias;
   showScreen("listener-standby");
-  startListenerPolling();
+  startListenerPoll();
 }
 
-function startListenerPolling() {
+function startListenerPoll(){
   stopAllPolls();
-  // Heartbeat + cek antrian
-  pollInterval = setInterval(async () => {
+  let tick=0;
+  pollInterval=setInterval(async()=>{
     if(!myListenerId) return;
-
-    // Update heartbeat
-    await sb.from("listeners").update({ last_seen: new Date().toISOString() }).eq("id", myListenerId);
-
-    // Kalau sedang di sesi, cek pesan baru
-    if(currentSessionId) {
+    tick++;
+    await sb.from("listeners").update({last_seen:new Date().toISOString(),status:currentSessionId?"busy":"online"}).eq("id",myListenerId);
+    if(tick%5===0) await cleanupStale();
+    if(currentSessionId){
       await pollMessages();
-      // Cek apakah sesi masih aktif
-      const { data: sess } = await sb.from("sessions").select("status").eq("id", currentSessionId).single();
-      if(sess && sess.status === "ended") {
-        handleSessionEnded({ byOther: true });
-      }
+      const {data:sess}=await sb.from("sessions").select("status").eq("id",currentSessionId).maybeSingle();
+      if(sess?.status==="ended") handleSessionEnded({byOther:true});
       return;
     }
-
-    // Cek antrian talker yang waiting
-    const { data: queue } = await sb.from("queue")
-      .select("*").eq("status","waiting").order("created_at").limit(1);
-    if(queue && queue.length > 0) {
-      // Tampilkan incoming
-      if(document.getElementById("screen-listener-incoming").classList.contains("active")) return;
-      window._pendingTalkerId = queue[0].talker_id;
-      window._pendingQueueId  = queue[0].id;
-      showScreen("listener-incoming");
+    const {data:queue}=await sb.from("queue").select("*").eq("status","waiting").order("created_at").limit(1);
+    const incomingActive=document.getElementById("screen-listener-incoming").classList.contains("active");
+    if(queue?.length){
+      window._pendingTalkerId=queue[0].talker_id;
+      window._pendingQueueId=queue[0].id;
+      if(!incomingActive) showScreen("listener-incoming");
     } else {
-      // Tidak ada antrian, standby
-      if(document.getElementById("screen-listener-incoming").classList.contains("active")) {
-        showScreen("listener-standby");
-      }
+      if(incomingActive) showScreen("listener-standby");
     }
-  }, POLL_INTERVAL);
+  },POLL_MS);
 }
 
-async function listenerAccept() {
-  const talkerId = window._pendingTalkerId;
-  const queueId  = window._pendingQueueId;
-  if(!talkerId){ showScreen("listener-standby"); return; }
-
-  // Lock: update queue status dulu (prevent double accept)
-  const { data: updated, error: lockErr } = await sb.from("queue")
-    .update({ status: "matched" })
-    .eq("id", queueId).eq("status","waiting")
-    .select();
-
-  if(lockErr || !updated || updated.length === 0) {
-    showToast("Talker sudah diambil listener lain");
-    window._pendingTalkerId = null;
-    showScreen("listener-standby");
-    return;
-  }
-
-  // Buat sesi
-  const sessionId = genId();
-  const { error: sessErr } = await sb.from("sessions").insert({
-    id: sessionId,
-    talker_id: talkerId,
-    listener_id: myListenerId,
-    status: "active",
-    start_time: new Date().toISOString()
-  });
-
-  if(sessErr) {
-    showToast("❌ Gagal membuat sesi: "+sessErr.message);
-    // Rollback queue
-    await sb.from("queue").update({ status:"waiting" }).eq("id", queueId);
-    return;
-  }
-
-  // Tandai listener busy
-  await sb.from("listeners").update({ busy: true }).eq("id", myListenerId);
-  // Hapus queue
-  await sb.from("queue").delete().eq("id", queueId);
-
-  window._pendingTalkerId = null;
-  window._pendingQueueId  = null;
-
-  startChatSession(sessionId, true);
+async function listenerAccept(){
+  const talkerId=window._pendingTalkerId,queueId=window._pendingQueueId;
+  if(!talkerId){showScreen("listener-standby");return;}
+  const {data:locked,error:lockErr}=await sb.from("queue").update({status:"matched"}).eq("id",queueId).eq("status","waiting").select();
+  if(lockErr||!locked?.length){showToast("Talker sudah diambil listener lain");window._pendingTalkerId=null;showScreen("listener-standby");return;}
+  const sessionId=genId();
+  const {error:sessErr}=await sb.from("sessions").insert({id:sessionId,talker_id:talkerId,listener_id:myListenerId,status:"active",start_time:new Date().toISOString()});
+  if(sessErr){showToast("❌ Gagal buat sesi");await sb.from("queue").update({status:"waiting"}).eq("id",queueId);return;}
+  await sb.from("listeners").update({busy:true,status:"busy"}).eq("id",myListenerId);
+  await sb.from("queue").delete().eq("id",queueId);
+  window._pendingTalkerId=null;window._pendingQueueId=null;
+  startChatSession(sessionId,true);
 }
 
-async function listenerReject() {
-  // Mark queue as skipped temporarily — talker tetap waiting
-  window._pendingTalkerId = null;
-  window._pendingQueueId  = null;
-  showScreen("listener-standby");
-}
+async function listenerReject(){window._pendingTalkerId=null;window._pendingQueueId=null;showScreen("listener-standby");}
 
-async function listenerLogout() {
+async function listenerLogout(){
   stopAllPolls();
-  if(myListenerId) await sb.from("listeners").delete().eq("id", myListenerId);
-  myListenerId = null; myRole = null; myId = null;
-  showScreen("landing");
+  if(myListenerId){await sb.from("listeners").update({status:"offline",busy:false}).eq("id",myListenerId);await sb.from("listeners").delete().eq("id",myListenerId);}
+  myListenerId=null;myRole=null;myId=null;showScreen("landing");
 }
 
 // ═══════════════════════════════════════
 // CHAT SESSION
 // ═══════════════════════════════════════
-async function startChatSession(sessionId, isListener) {
-  currentSessionId = sessionId;
-  myRole = isListener ? "listener" : "talker";
-  sessionAudioFiles = [];
-  lastMsgTs = 0;
-
-  document.getElementById("chat-role-label").textContent = isListener ? "Sebagai Pendengar" : "Cerita kamu aman di sini";
-  document.getElementById("chat-box").innerHTML = "";
-  showScreen("chat");
-  startTimer();
-
-  // Load pesan awal
-  const { data: msgs } = await sb.from("messages")
-    .select("*").eq("session_id", sessionId).order("ts");
-  if(msgs && msgs.length > 0) {
-    msgs.forEach(m => {
-      const mine = (isListener && m.role==="listener") || (!isListener && m.role==="talker");
-      m.audio_url ? appendVoiceBubble(m.audio_url, 0, mine, m.ts) : appendTextBubble(m.text, mine, m.ts);
-      if(m.ts > lastMsgTs) lastMsgTs = m.ts;
-    });
+async function startChatSession(sessionId,isListener){
+  currentSessionId=sessionId;myRole=isListener?"listener":"talker";
+  sessionAudioFiles=[];lastMsgTs=0;
+  document.getElementById("chat-role-label").textContent=isListener?(currentLang==="id"?"Sebagai Pendengar":"As Listener"):(currentLang==="id"?"Cerita kamu aman":"You're safe here");
+  document.getElementById("chat-box").innerHTML="";
+  showScreen("chat");startTimer();
+  const {data:msgs}=await sb.from("messages").select("*").eq("session_id",sessionId).order("ts");
+  if(msgs?.length){msgs.forEach(m=>{const mine=(isListener&&m.role==="listener")||(!isListener&&m.role==="talker");m.audio_url?appendVoiceBubble(m.audio_url,0,mine,m.ts):appendTextBubble(m.text,mine,m.ts);if(m.ts>lastMsgTs)lastMsgTs=m.ts;});}
+  if(!isListener){
+    stopAllPolls();
+    pollInterval=setInterval(async()=>{
+      if(!currentSessionId) return;
+      await pollMessages();
+      const {data:sess}=await sb.from("sessions").select("status").eq("id",currentSessionId).maybeSingle();
+      if(sess?.status==="ended") handleSessionEnded({byOther:true});
+    },POLL_MS);
   }
-
-  // Polling pesan baru + cek sesi
-  stopAllPolls();
-  pollInterval = setInterval(async () => {
-    if(!currentSessionId) return;
-
-    // Heartbeat listener
-    if(myRole==="listener" && myListenerId) {
-      await sb.from("listeners").update({ last_seen: new Date().toISOString() }).eq("id", myListenerId);
-    }
-
-    await pollMessages();
-
-    // Cek sesi masih aktif
-    const { data: sess } = await sb.from("sessions").select("status").eq("id", currentSessionId).maybeSingle();
-    if(sess && sess.status === "ended") {
-      handleSessionEnded({ byOther: true });
-    }
-  }, POLL_INTERVAL);
 }
 
-async function pollMessages() {
+async function pollMessages(){
   if(!currentSessionId) return;
-  const { data: newMsgs } = await sb.from("messages")
-    .select("*").eq("session_id", currentSessionId).gt("ts", lastMsgTs).order("ts");
-  if(!newMsgs || newMsgs.length === 0) return;
-
-  newMsgs.forEach(m => {
-    const mine = (myRole==="listener" && m.role==="listener") || (myRole==="talker" && m.role==="talker");
-    if(!mine) { // Tampilkan hanya pesan dari pihak lain
-      m.audio_url ? appendVoiceBubble(m.audio_url, 0, false, m.ts) : appendTextBubble(m.text, false, m.ts);
-    }
-    if(m.ts > lastMsgTs) lastMsgTs = m.ts;
+  const {data:newMsgs}=await sb.from("messages").select("*").eq("session_id",currentSessionId).gt("ts",lastMsgTs).order("ts");
+  if(!newMsgs?.length) return;
+  newMsgs.forEach(m=>{
+    const mine=(myRole==="listener"&&m.role==="listener")||(myRole==="talker"&&m.role==="talker");
+    if(!mine) m.audio_url?appendVoiceBubble(m.audio_url,0,false,m.ts):appendTextBubble(m.text,false,m.ts);
+    if(m.ts>lastMsgTs) lastMsgTs=m.ts;
   });
 }
 
-async function sendMsg() {
-  const inp = document.getElementById("chat-input");
-  const text = inp.value.trim();
-  if(!text || !currentSessionId) return;
-  inp.value = "";
-  const ts = Date.now();
-  lastMsgTs = ts;
-  appendTextBubble(text, true, ts);
-  await sb.from("messages").insert({ session_id: currentSessionId, role: myRole, text, ts });
+async function sendMsg(){
+  const inp=document.getElementById("chat-input");
+  const text=inp.value.trim();
+  if(!text||!currentSessionId) return;
+  inp.value="";
+  const ts=Date.now();lastMsgTs=ts;
+  appendTextBubble(text,true,ts);
+  await sb.from("messages").insert({session_id:currentSessionId,role:myRole,text,ts});
 }
 
-function appendTextBubble(text, mine, ts) {
-  const box = document.getElementById("chat-box");
-  const d = document.createElement("div");
-  d.className = "bubble "+(mine?"mine":"theirs");
-  d.innerHTML = `${text}<div class="btime">${fmtTime(ts)}</div>`;
-  box.appendChild(d); box.scrollTop = box.scrollHeight;
+function appendTextBubble(text,mine,ts){
+  const box=document.getElementById("chat-box");
+  const d=document.createElement("div");d.className="bubble "+(mine?"mine":"theirs");
+  d.innerHTML=`${escHtml(text)}<div class="btime">${fmtTime(ts)}</div>`;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
 }
 
-// ═══════════════════════════════════════
-// VOICE NOTE — RECORD
-// ═══════════════════════════════════════
-async function toggleRecording() {
-  isRecording ? stopRecording() : startRecording();
-}
-
-async function startRecording() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/ogg";
-    mediaRecorder = new MediaRecorder(stream, { mimeType: mime });
-    audioChunks = [];
-    mediaRecorder.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
-    mediaRecorder.onstop = async () => {
-      stream.getTracks().forEach(t=>t.stop());
-      await uploadAndSendVoice(new Blob(audioChunks, { type: mime }), recSeconds);
-    };
-    mediaRecorder.start(100); isRecording = true; recSeconds = 0;
+// ── VOICE NOTE RECORD
+async function toggleRecording(){isRecording?stopRecording():startRecording();}
+async function startRecording(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const mime=MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":"audio/ogg";
+    mediaRecorder=new MediaRecorder(stream,{mimeType:mime});audioChunks=[];
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
+    mediaRecorder.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());await uploadAndSendVoice(new Blob(audioChunks,{type:mime}),recSeconds);};
+    mediaRecorder.start(100);isRecording=true;recSeconds=0;
     document.getElementById("rec-btn").classList.add("recording");
-    document.getElementById("rec-btn").textContent = "⏹️";
+    document.getElementById("rec-btn").textContent="⏹️";
     document.getElementById("rec-bar").classList.add("active");
-    recTimerInterval = setInterval(() => {
-      recSeconds++;
-      document.getElementById("rec-time").textContent = fmtDur(recSeconds);
-      if(recSeconds >= 120) stopRecording();
-    }, 1000);
-  } catch(e) { showToast("❌ Tidak bisa akses mikrofon"); }
+    recTimerInterval=setInterval(()=>{recSeconds++;document.getElementById("rec-time").textContent=fmtDur(recSeconds);if(recSeconds>=120)stopRecording();},1000);
+  }catch(e){showToast("❌ Tidak bisa akses mikrofon");}
 }
-
-function stopRecording() {
+function stopRecording(){
   if(!mediaRecorder) return;
-  clearInterval(recTimerInterval); mediaRecorder.stop(); isRecording = false;
+  clearInterval(recTimerInterval);mediaRecorder.stop();isRecording=false;
   document.getElementById("rec-btn").classList.remove("recording");
-  document.getElementById("rec-btn").textContent = "🎙️";
+  document.getElementById("rec-btn").textContent="🎙️";
   document.getElementById("rec-bar").classList.remove("active");
-  document.getElementById("rec-time").textContent = "0:00";
+  document.getElementById("rec-time").textContent="0:00";
 }
-
-function cancelRecording() {
+function cancelRecording(){
   if(!mediaRecorder) return;
-  clearInterval(recTimerInterval);
-  mediaRecorder.ondataavailable = null; mediaRecorder.onstop = null;
-  try { mediaRecorder.stop(); } catch(e){}
-  mediaRecorder = null; isRecording = false; audioChunks = [];
+  clearInterval(recTimerInterval);mediaRecorder.ondataavailable=null;mediaRecorder.onstop=null;
+  try{mediaRecorder.stop();}catch(e){}
+  mediaRecorder=null;isRecording=false;audioChunks=[];
   document.getElementById("rec-btn").classList.remove("recording");
-  document.getElementById("rec-btn").textContent = "🎙️";
+  document.getElementById("rec-btn").textContent="🎙️";
   document.getElementById("rec-bar").classList.remove("active");
-  document.getElementById("rec-time").textContent = "0:00";
+  document.getElementById("rec-time").textContent="0:00";
 }
-
-async function uploadAndSendVoice(blob, duration) {
+async function uploadAndSendVoice(blob,duration){
   if(!currentSessionId) return;
-  showToast("⏳ Mengirim voice note...", 6000);
-  const ext = blob.type.includes("webm")?"webm":"ogg";
-  const path = `${currentSessionId}/${genId()}.${ext}`;
-  const { error } = await sb.storage.from("voice-notes").upload(path, blob, { contentType: blob.type });
-  if(error){ showToast("❌ Gagal kirim voice note"); return; }
-  const { data: urlData } = sb.storage.from("voice-notes").getPublicUrl(path);
-  const audioUrl = urlData.publicUrl;
+  showToast("⏳ Mengirim voice note...",6000);
+  const ext=blob.type.includes("webm")?"webm":"ogg";
+  const path=`${currentSessionId}/${genId()}.${ext}`;
+  const {error}=await sb.storage.from("voice-notes").upload(path,blob,{contentType:blob.type});
+  if(error){showToast("❌ Gagal kirim voice note");return;}
+  const {data:urlData}=sb.storage.from("voice-notes").getPublicUrl(path);
+  const audioUrl=urlData.publicUrl;
   sessionAudioFiles.push(path);
-  const ts = Date.now();
-  lastMsgTs = ts;
-  appendVoiceBubble(audioUrl, duration, true, ts);
-  await sb.from("messages").insert({ session_id: currentSessionId, role: myRole, text:"[Voice Note]", audio_url: audioUrl, ts });
+  const ts=Date.now();lastMsgTs=ts;
+  appendVoiceBubble(audioUrl,duration,true,ts);
+  await sb.from("messages").insert({session_id:currentSessionId,role:myRole,text:"[Voice Note]",audio_url:audioUrl,ts});
   showToast("✅ Voice note terkirim");
 }
 
-// ═══════════════════════════════════════
-// VOICE NOTE — PLAY
-// ═══════════════════════════════════════
-function appendVoiceBubble(audioUrl, duration, mine, ts) {
-  const box = document.getElementById("chat-box");
-  const id = "vn"+genId().replace(/-/g,"");
-  const bars = Array.from({length:22},()=>`<div class="vb-bar" style="height:${Math.floor(Math.random()*18+6)}px"></div>`).join("");
-  const d = document.createElement("div");
-  d.className = "bubble "+(mine?"mine":"theirs");
-  d.innerHTML = `<div class="voice-bubble">
-    <button class="vb-play" id="play_${id}" onclick="togglePlay('${id}','${audioUrl.replace(/'/g,"\\'")}')">▶</button>
-    <div class="vb-bars" id="bars_${id}">${bars}</div>
-    <span class="vb-dur" id="dur_${id}">${fmtDur(duration)}</span>
-  </div><div class="btime">${fmtTime(ts)}</div>`;
-  box.appendChild(d); box.scrollTop = box.scrollHeight;
+// ── VOICE NOTE PLAY
+function appendVoiceBubble(audioUrl,duration,mine,ts){
+  const box=document.getElementById("chat-box");
+  const id="vn"+genId().replace(/-/g,"");
+  const bars=Array.from({length:22},()=>`<div class="vb-bar" style="height:${Math.floor(Math.random()*18+6)}px"></div>`).join("");
+  const d=document.createElement("div");d.className="bubble "+(mine?"mine":"theirs");
+  d.innerHTML=`<div class="voice-bubble"><button class="vb-play" id="play_${id}" onclick="togglePlay('${id}','${audioUrl.replace(/'/g,"\\'")}')">▶</button><div class="vb-bars" id="bars_${id}">${bars}</div><span class="vb-dur" id="dur_${id}">${fmtDur(duration)}</span></div><div class="btime">${fmtTime(ts)}</div>`;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
 }
-
-function togglePlay(id, url) {
-  if(currentAudio && currentAudioId===id) {
-    currentAudio.paused ? currentAudio.play() : currentAudio.pause();
-    document.getElementById("play_"+id).textContent = currentAudio.paused?"▶":"⏸";
-    return;
-  }
-  if(currentAudio){ currentAudio.pause(); if(currentAudioId){ const pb=document.getElementById("play_"+currentAudioId); if(pb)pb.textContent="▶"; resetBars(currentAudioId); } clearInterval(audioProgressInterval); }
-  currentAudio = new Audio(url); currentAudioId = id;
-  document.getElementById("play_"+id).textContent = "⏸";
+function togglePlay(id,url){
+  if(currentAudio&&currentAudioId===id){currentAudio.paused?currentAudio.play():currentAudio.pause();document.getElementById("play_"+id).textContent=currentAudio.paused?"▶":"⏸";return;}
+  if(currentAudio){currentAudio.pause();if(currentAudioId){const pb=document.getElementById("play_"+currentAudioId);if(pb)pb.textContent="▶";resetBars(currentAudioId);}clearInterval(audioProgressInterval);}
+  currentAudio=new Audio(url);currentAudioId=id;
+  document.getElementById("play_"+id).textContent="⏸";
   currentAudio.play();
-  audioProgressInterval = setInterval(()=>{
+  audioProgressInterval=setInterval(()=>{
     if(!currentAudio||currentAudio.paused) return;
-    const pct = currentAudio.currentTime/(currentAudio.duration||1);
-    const allBars = document.querySelectorAll(`#bars_${id} .vb-bar`);
-    const n = Math.floor(pct*allBars.length);
+    const pct=currentAudio.currentTime/(currentAudio.duration||1);
+    const allBars=document.querySelectorAll(`#bars_${id} .vb-bar`);
+    const n=Math.floor(pct*allBars.length);
     allBars.forEach((b,i)=>i<n?b.classList.add("played"):b.classList.remove("played"));
     const durEl=document.getElementById("dur_"+id);
     if(durEl) durEl.textContent=fmtDur((currentAudio.duration||0)-currentAudio.currentTime);
   },100);
-  currentAudio.onended=()=>{
-    clearInterval(audioProgressInterval);
-    const pb=document.getElementById("play_"+id); if(pb)pb.textContent="▶";
-    resetBars(id); currentAudio=null; currentAudioId=null;
-  };
+  currentAudio.onended=()=>{clearInterval(audioProgressInterval);const pb=document.getElementById("play_"+id);if(pb)pb.textContent="▶";resetBars(id);currentAudio=null;currentAudioId=null;};
 }
-function resetBars(id){ document.querySelectorAll(`#bars_${id} .vb-bar`).forEach(b=>b.classList.remove("played")); }
+function resetBars(id){document.querySelectorAll(`#bars_${id} .vb-bar`).forEach(b=>b.classList.remove("played"));}
 
 // ═══════════════════════════════════════
 // SESSION END
 // ═══════════════════════════════════════
-async function endSession() {
+async function endSession(){
   if(!currentSessionId) return;
-  await sb.from("sessions").update({ status:"ended" }).eq("id", currentSessionId);
-  handleSessionEnded({ self: true });
+  await sb.from("sessions").update({status:"ended"}).eq("id",currentSessionId);
+  handleSessionEnded({self:true});
 }
-
-async function handleSessionEnded(payload={}) {
-  stopTimer(); cancelRecording();
-  if(currentAudio){ currentAudio.pause(); clearInterval(audioProgressInterval); currentAudio=null; }
-  stopAllPolls();
-
-  const sessionId = currentSessionId;
-  currentSessionId = null;
-
-  if(sessionId) {
-    await sb.from("sessions").update({ status:"ended" }).eq("id", sessionId);
-    if(myRole==="listener" && myListenerId) {
-      await sb.from("listeners").update({ busy:false }).eq("id", myListenerId);
-    }
-    if(sessionAudioFiles.length) {
-      await sb.storage.from("voice-notes").remove(sessionAudioFiles);
-      sessionAudioFiles=[];
-    }
+async function handleSessionEnded(payload={}){
+  stopTimer();cancelRecording();
+  if(currentAudio){currentAudio.pause();clearInterval(audioProgressInterval);currentAudio=null;}
+  const sessionId=currentSessionId;currentSessionId=null;
+  if(sessionId){
+    await sb.from("sessions").update({status:"ended"}).eq("id",sessionId);
+    if(myRole==="listener"&&myListenerId) await sb.from("listeners").update({busy:false,status:"online"}).eq("id",myListenerId);
+    if(sessionAudioFiles.length){await sb.storage.from("voice-notes").remove(sessionAudioFiles);sessionAudioFiles=[];}
   }
-
-  if(myRole==="listener") {
+  if(myRole==="listener"){
     showToast("Sesi selesai");
-    setTimeout(()=>{ showScreen("listener-standby"); startListenerPolling(); }, 800);
+    setTimeout(()=>{showScreen("listener-standby");stopAllPolls();startListenerPoll();},800);
   } else {
-    let msg = "Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏";
-    if(payload.byOther) msg = "Sesi telah diakhiri.";
-    document.getElementById("ended-msg").innerHTML = msg;
+    stopAllPolls();
+    let msg=currentLang==="id"?"Terima kasih sudah mau bercerita.<br>Kamu tidak sendirian. 🙏":"Thank you for sharing.<br>You are not alone. 🙏";
+    if(payload.byOther) msg=currentLang==="id"?"Sesi telah diakhiri.":"The session has ended.";
+    document.getElementById("ended-msg").innerHTML=msg;
     selectedMood=null;
     document.querySelectorAll(".mood-btn").forEach(b=>b.classList.remove("selected"));
     document.getElementById("feedback-text").value="";
     document.getElementById("feedback-btn").disabled=false;
-    document.getElementById("feedback-btn").textContent="Kirim Feedback →";
+    document.getElementById("feedback-btn").textContent=currentLang==="id"?"Kirim Feedback →":"Send Feedback →";
     document.getElementById("feedback-done").style.display="none";
     document.getElementById("feedback-section").style.display="block";
     showScreen("ended");
@@ -677,45 +928,39 @@ async function handleSessionEnded(payload={}) {
 // ═══════════════════════════════════════
 // MODERATOR
 // ═══════════════════════════════════════
-async function modJoin() {
-  if(document.getElementById("mod-secret").value.trim()!==MODERATOR_SECRET){ showToast("❌ Password salah"); return; }
-  myRole="mod"; showScreen("mod-dashboard"); await modRefresh();
+async function modJoin(){
+  if(document.getElementById("mod-secret").value.trim()!==MODERATOR_SECRET){showToast("❌ Password salah");return;}
+  myRole="mod";showScreen("mod-dashboard");await modRefresh();
 }
-
-async function modRefresh() {
-  const [{data:listeners},{data:sessions},{data:queue}] = await Promise.all([
+async function modRefresh(){
+  const [{data:listeners},{data:sessions},{data:queue}]=await Promise.all([
     sb.from("listeners").select("*"),
     sb.from("sessions").select("*").eq("status","active"),
     sb.from("queue").select("*").eq("status","waiting")
   ]);
-  document.getElementById("mod-listener-count").textContent = listeners?.filter(l=>!l.busy).length||0;
-  document.getElementById("mod-session-count").textContent  = sessions?.length||0;
-  document.getElementById("mod-queue-count").textContent    = queue?.length||0;
-  document.getElementById("mod-talker-count").textContent   = queue?.length||0;
-
-  const c = document.getElementById("mod-sessions");
-  if(!sessions?.length){ c.innerHTML='<div class="empty-state">Belum ada sesi aktif</div>'; return; }
-  c.innerHTML = sessions.map(s=>{
-    const l = listeners?.find(x=>x.id===s.listener_id);
-    const dur = Math.floor((Date.now()-new Date(s.start_time||s.started_at))/60000);
+  document.getElementById("mod-listener-count").textContent=listeners?.filter(l=>!l.busy).length||0;
+  document.getElementById("mod-session-count").textContent=sessions?.length||0;
+  document.getElementById("mod-queue-count").textContent=queue?.length||0;
+  document.getElementById("mod-talker-count").textContent=queue?.length||0;
+  const c=document.getElementById("mod-sessions");
+  if(!sessions?.length){c.innerHTML=`<div class="empty-state">${T[currentLang]["md-empty"]}</div>`;return;}
+  c.innerHTML=sessions.map(s=>{
+    const l=listeners?.find(x=>x.id===s.listener_id);
+    const dur=Math.floor((Date.now()-new Date(s.start_time||s.started_at))/60000);
     return `<div class="session-item"><div class="session-info"><div class="si-title"><span class="dot dot-green"></span>${l?.alias||"Listener"}</div><div class="si-sub">Durasi: ${dur} menit</div></div><button class="btn btn-danger" style="padding:6px 12px;font-size:.75rem" onclick="modEndSession('${s.id}','${s.listener_id}')">Akhiri</button></div>`;
   }).join("");
 }
-
-async function modEndSession(sessionId, listenerId) {
-  await sb.from("sessions").update({ status:"ended" }).eq("id", sessionId);
-  await sb.from("listeners").update({ busy:false }).eq("id", listenerId);
-  showToast("Sesi diakhiri"); await modRefresh();
+async function modEndSession(sessionId,listenerId){
+  await sb.from("sessions").update({status:"ended"}).eq("id",sessionId);
+  await sb.from("listeners").update({busy:false,status:"online"}).eq("id",listenerId);
+  showToast("Sesi diakhiri");await modRefresh();
 }
 
 // ═══════════════════════════════════════
 // TIMER
 // ═══════════════════════════════════════
-function startTimer() {
-  timerSeconds=SESSION_DURATION; updateTimerUI();
-  timerInterval=setInterval(()=>{ if(--timerSeconds<=0){ stopTimer(); endSession(); return; } updateTimerUI(); },1000);
-}
-function stopTimer(){ if(timerInterval){ clearInterval(timerInterval); timerInterval=null; } }
+function startTimer(){timerSeconds=SESSION_DURATION;updateTimerUI();timerInterval=setInterval(()=>{if(--timerSeconds<=0){stopTimer();endSession();return;}updateTimerUI();},1000);}
+function stopTimer(){if(timerInterval){clearInterval(timerInterval);timerInterval=null;}}
 function updateTimerUI(){
   const h=Math.floor(timerSeconds/3600),m=Math.floor((timerSeconds%3600)/60),s=timerSeconds%60;
   document.getElementById("timer-label").textContent=`${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
@@ -727,22 +972,18 @@ function updateTimerUI(){
 // ═══════════════════════════════════════
 // FEEDBACK & RESET
 // ═══════════════════════════════════════
-function pilihMood(btn){
-  document.querySelectorAll(".mood-btn").forEach(b=>b.classList.remove("selected"));
-  btn.classList.add("selected"); selectedMood=btn.dataset.mood;
-}
+function pilihMood(btn){document.querySelectorAll(".mood-btn").forEach(b=>b.classList.remove("selected"));btn.classList.add("selected");selectedMood=btn.dataset.mood;}
 async function kirimFeedback(){
   document.getElementById("feedback-btn").disabled=true;
-  document.getElementById("feedback-btn").textContent="Mengirim...";
+  document.getElementById("feedback-btn").textContent=currentLang==="id"?"Mengirim...":"Sending...";
   document.getElementById("feedback-section").style.display="none";
   document.getElementById("feedback-done").style.display="block";
 }
-
 function resetApp(){
-  stopTimer(); cancelRecording(); stopAllPolls();
-  if(currentAudio){ currentAudio.pause(); clearInterval(audioProgressInterval); currentAudio=null; }
+  stopTimer();cancelRecording();stopAllPolls();
+  if(currentAudio){currentAudio.pause();clearInterval(audioProgressInterval);currentAudio=null;}
   currentSessionId=myRole=myId=myListenerId=null;
-  selectedMood=null; sessionAudioFiles=[]; lastMsgTs=0;
+  selectedMood=null;sessionAudioFiles=[];lastMsgTs=0;
   document.getElementById("chat-box").innerHTML="";
   document.getElementById("feedback-text").value="";
   document.getElementById("feedback-done").style.display="none";
@@ -752,23 +993,21 @@ function resetApp(){
 }
 
 // ═══════════════════════════════════════
-// UNLOAD — cleanup saat browser ditutup
+// UTILS
 // ═══════════════════════════════════════
-window.addEventListener("beforeunload", ()=>{
-  if(currentSessionId){
-    navigator.sendBeacon(
-      `${SUPABASE_URL}/rest/v1/sessions?id=eq.${currentSessionId}`,
-      JSON.stringify({ status:"ended" })
-    );
-  }
-  if(myListenerId){
-    navigator.sendBeacon(
-      `${SUPABASE_URL}/rest/v1/listeners?id=eq.${myListenerId}`,
-      JSON.stringify({ busy:false, last_seen: new Date().toISOString() })
-    );
-  }
+function escHtml(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+// ═══════════════════════════════════════
+// OFFLINE DETECTION
+// ═══════════════════════════════════════
+window.addEventListener("beforeunload",()=>{
+  if(currentSessionId) sbPatch("sessions",`id=eq.${currentSessionId}`,{status:"ended"});
+  if(myListenerId) sbDel("listeners",`id=eq.${myListenerId}`);
 });
 
+// ═══════════════════════════════════════
+// INIT — buat tabel wall_posts kalau belum ada
+// ═══════════════════════════════════════
 showScreen("landing");
 </script>
 </body>
