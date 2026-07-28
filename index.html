@@ -607,7 +607,12 @@ async function loadWall(){
   const feed=document.getElementById("wall-feed");
   feed.innerHTML=`<div class="empty-state" id="t-wall-loading">${T[currentLang]["wall-loading"]}</div>`;
   const {data,error}=await sb.from("wall_posts").select("*").order("created_at",{ascending:false}).limit(30);
-  if(error||!data?.length){
+  if(error){
+    console.error("Load wall error:",error.message);
+    feed.innerHTML=`<div class="empty-state" style="color:var(--red)">❌ Gagal memuat<br><small style="opacity:.6;font-size:.72rem">${error.message}</small><br><br><small style="opacity:.5;font-size:.7rem">Jalankan SQL di Supabase untuk buat tabel wall_posts</small></div>`;
+    return;
+  }
+  if(!data?.length){
     feed.innerHTML=`<div class="empty-state">${currentLang==="id"?"Belum ada cerita. Jadilah yang pertama berbagi!":"No stories yet. Be the first to share!"}</div>`;
     return;
   }
@@ -631,11 +636,15 @@ async function postToWall(){
   if(!txt){showToast("Tulis sesuatu dulu ya 🙏");return;}
   if(txt.length<5){showToast("Terlalu pendek 🙏");return;}
   const btn=document.getElementById("t-wall-post-btn");
-  btn.disabled=true;
+  btn.disabled=true;btn.textContent="Mengirim...";
   const {error}=await sb.from("wall_posts").insert({content:txt,likes:0});
+  btn.disabled=false;btn.textContent=T[currentLang]["wall-post-btn"]||"Bagikan →";
+  if(error){
+    console.error("Wall post error:",error.message);
+    showToast("❌ "+error.message,5000);
+    return;
+  }
   document.getElementById("wall-input").value="";
-  btn.disabled=false;
-  if(error){showToast("❌ Gagal posting");return;}
   showToast(currentLang==="id"?"Ceritamu sudah dibagikan 🌿":"Your story has been shared 🌿");
   await loadWall();
 }
