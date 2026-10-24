@@ -30,6 +30,8 @@
   .role-btn .rb-desc{font-size:.75rem;color:var(--muted);margin-top:2px}
   .role-btn.secondary{border-color:var(--border);opacity:.85}
   .role-btn.accent{border-color:#2a4a2a}
+  .role-btn.telegram{border-color:#1a4a6e;text-decoration:none}
+  .role-btn.telegram:hover{border-color:#229ED9}
   /* Lang toggle */
   .lang-toggle{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
   .lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.72rem;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
@@ -124,7 +126,7 @@
   .tab-row{display:flex;gap:6px;margin-bottom:16px;background:var(--surface2);border-radius:10px;padding:4px}
   .tab-btn{flex:1;background:transparent;border:none;padding:8px;border-radius:8px;font-size:.78rem;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
   .tab-btn.active{background:var(--surface);color:var(--gold2);border:1px solid var(--border)}
-  
+
   /* Reply */
   .wall-replies{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
   .reply-item{background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:.82rem;color:var(--cream);line-height:1.5}
@@ -170,6 +172,10 @@
       <span class="icon">📅</span>
       <div><div class="rb-title" id="t-appt-title">Buat Jadwal Sesi</div><div class="rb-desc" id="t-appt-desc">Daftar sesi curhat terjadwal dengan pendengar</div></div>
     </button>
+    <a class="role-btn secondary telegram" href="https://t.me/+J3MoryO4dlYxYTNl" target="_blank" rel="noopener noreferrer">
+      <span class="icon">📣</span>
+      <div><div class="rb-title" id="t-tg-title">Info & Update Sesi</div><div class="rb-desc" id="t-tg-desc">Gabung grup Telegram untuk jadwal dan pengumuman</div></div>
+    </a>
     <button class="role-btn secondary" onclick="showScreen('mod-join')" style="opacity:.45">
       <span class="icon">🔒</span>
       <div><div class="rb-title" id="t-mod-title">Moderator</div><div class="rb-desc" id="t-mod-desc">Akses khusus pengelola</div></div>
@@ -395,6 +401,7 @@ const T = {
     "listener-title":"Saya listener","listener-desc":"Siap mendengarkan dan menemani",
     "wall-title":"Dinding Curhat","wall-desc":"Baca & bagikan cerita anonim",
     "appt-title":"Buat Jadwal Sesi","appt-desc":"Daftar sesi curhat terjadwal dengan pendengar",
+    "tg-title":"Info & Update Sesi","tg-desc":"Gabung grup Telegram untuk jadwal dan pengumuman",
     "mod-title":"Moderator","mod-desc":"Akses khusus pengelola",
     back:"Kembali",
     "tj-h2":"Halo 👋","tj-sub":"Tidak perlu nama. Tidak ada yang menghakimi di sini.",
@@ -434,6 +441,7 @@ const T = {
     "listener-title":"I am a listener","listener-desc":"Ready to listen and accompany",
     "wall-title":"Sharing Wall","wall-desc":"Read & share anonymous stories",
     "appt-title":"Schedule a Session","appt-desc":"Book a session with a listener in advance",
+    "tg-title":"Session Info & Updates","tg-desc":"Join our Telegram group for schedules and announcements",
     "mod-title":"Moderator","mod-desc":"Admin access only",
     back:"Back",
     "tj-h2":"Hello 👋","tj-sub":"No name needed. No judgment here.",
@@ -479,6 +487,7 @@ function setLang(lang) {
     "t-listener-title":"listener-title","t-listener-desc":"listener-desc",
     "t-wall-title":"wall-title","t-wall-desc":"wall-desc",
     "t-appt-title":"appt-title","t-appt-desc":"appt-desc",
+    "t-tg-title":"tg-title","t-tg-desc":"tg-desc",
     "t-mod-title":"mod-title","t-mod-desc":"mod-desc",
     "t-back":"back",
     "t-tj-h2":"tj-h2","t-tj-sub":"tj-sub","t-tj-body":"tj-body","t-tj-btn":"tj-btn",
@@ -629,7 +638,7 @@ async function loadWall(){
     feed.innerHTML=`<div class="empty-state">${currentLang==="id"?"Belum ada cerita. Jadilah yang pertama berbagi!":"No stories yet. Be the first to share!"}</div>`;
     return;
   }
-  
+
   // Load reply counts
   const postIds = data.map(p=>p.id);
   let replyCounts = {};
@@ -1111,7 +1120,7 @@ async function sendReply(postId){
 function startEditReply(replyId, postId) {
   const textSpan = document.getElementById("reply-text-"+replyId);
   if (!textSpan) return;
-  const currentText = textSpan.textContent;
+  const currentText = textSpan.textContent.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   textSpan.innerHTML = `
     <div class="reply-edit-row" style="display:flex;gap:6px;margin-top:4px;">
       <input type="text" id="edit-input-${replyId}" value="${currentText}" style="flex:1;background:var(--surface);border:1px solid var(--gold);border-radius:4px;padding:4px 8px;color:var(--cream);font-size:.78rem;margin:0;" />
@@ -1146,7 +1155,7 @@ window.addEventListener("beforeunload",()=>{
 });
 
 // ═══════════════════════════════════════
-// INIT — buat tabel wall_posts kalau belum ada
+// INIT
 // ═══════════════════════════════════════
 showScreen("landing");
 </script>
